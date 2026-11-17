@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hán Tự Flashcard — Học Tiếng Trung Giao Tiếp</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .hanzi-font {
+      font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    .card-transition {
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-lg hanzi-font shadow-sm">
+          汉
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 leading-tight">Luyện Câu Tiếng Trung Giao Tiếp &amp; Cơ Khí</h1>
+          <p class="text-xs text-slate-500">Đời sống · Bản vẽ cơ khí · Kích thước &amp; Khoảng cách</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btn-tab-study" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition">
+          Học thẻ
+        </button>
+        <button id="btn-tab-practice" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          🎯 Kiểm tra Đọc/Viết
+        </button>
+        <button id="btn-tab-list" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+          Danh sách (<span id="total-count-badge">0</span>)
+        </button>
+        <button id="btn-open-import" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1">
+          <span>+ Nhập từ Gemini</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg transition-opacity duration-200"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-5">
+    <!-- Filter & Progress Bar -->
+    <section class="mb-5 bg-white rounded-2xl border border-slate-200 p-3.5 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <label for="topic-filter" class="text-xs font-medium text-slate-500">Chủ đề:</label>
+          <select id="topic-filter" class="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500">
+            <option value="all">Tất cả chủ đề</option>
+          </select>
+
+          <select id="status-filter" class="text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="learning">Cần ôn lại</option>
+            <option value="mastered">Đã thuộc</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-3 text-xs">
+          <span class="text-slate-600">Đã thuộc: <strong id="mastered-stat" class="text-emerald-600">0/0</strong></span>
+          <div class="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="mastery-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUDY VIEW -->
+    <section id="view-study" class="space-y-4">
+      <!-- Empty state -->
+      <div id="study-empty" class="hidden bg-white rounded-2xl border border-slate-200 p-10 text-center">
+        <p class="text-slate-600 text-sm mb-3">Không có thẻ nào khớp với bộ lọc hiện tại.</p>
+        <button id="btn-reset-filters" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
+          Xem tất cả thẻ
+        </button>
+      </div>
+
+      <!-- Flashcard Container -->
+      <div id="study-card-wrapper" class="space-y-4">
+        <div class="flex items-center justify-between text-xs text-slate-500 px-1">
+          <span>Thẻ <strong id="card-index-label" class="text-slate-800">1 / 1</strong></span>
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="toggle-pinyin-front" checked class="rounded text-rose-600 focus:ring-rose-500" />
+              <span>Hiện Pinyin mặt trước</span>
+            </label>
+            <button id="btn-shuffle" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium transition">
+              Xáo trộn
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D Flip Card -->
+        <div class="perspective-1000 w-full">
+          <div id="flashcard" class="relative w-full min-h-[440px] sm:min-h-[420px] transform-style-3d card-transition cursor-pointer">
+            <!-- FRONT -->
+            <div class="absolute inset-0 backface-hidden bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span id="front-topic" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                  Giao tiếp
+                </span>
+                <span id="front-status-badge" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700">
+                  Cần ôn lại
+                </span>
+              </div>
+
+              <div class="my-auto text-center py-6">
+                <div id="front-hanzi" class="hanzi-font text-2xl sm:text-4xl font-bold text-slate-900 tracking-wide leading-snug mb-3 px-2">
+                  你好
+                </div>
+                <div id="front-pinyin" class="text-lg sm:text-xl font-medium text-rose-600 mb-5">
+                  nǐ hǎo
+                </div>
+
+                <div class="flex items-center justify-center gap-2">
+                  <button type="button" id="btn-speak-front" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition flex items-center gap-1.5">
+                    <span>🔊 Phát âm</span>
+                  </button>
+                  <button type="button" id="btn-speak-slow" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition">
+                    🐢 Chậm
+                  </button>
+                </div>
+              </div>
+
+              <div class="text-center text-xs text-slate-400">
+                Nhấn vào thẻ (hoặc phím Space) để xem nghĩa &amp; phân tích Hán tự
+              </div>
+            </div>
+
+            <!-- BACK -->
+            <div class="absolute inset-0 backface-hidden rotate-y-180 bg-white rounded-3xl border border-rose-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
+              <div>
+                <div class="flex flex-wrap items-baseline justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div class="flex items-baseline gap-2.5">
+                    <span id="back-hanzi" class="hanzi-font text-2xl sm:text-3xl font-bold text-slate-900">你好</span>
+                    <span id="back-pinyin" class="text-sm sm:text-base font-semibold text-rose-600">nǐ hǎo</span>
+                  </div>
+                  <button type="button" id="btn-speak-back" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition">
+                    🔊 Nghe lại
+                  </button>
+                </div>
+
+                <div class="mt-3">
+                  <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">Nghĩa tiếng Việt</div>
+                  <div id="back-meaning" class="text-base sm:text-lg font-bold text-slate-900">Xin chào</div>
+                </div>
+
+                <!-- Hanzi Breakdown -->
+                <div class="mt-4">
+                  <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Phân tích Hán tự &amp; Mẹo nhớ kiểu Hanzii</div>
+                  <div id="back-hanzi-breakdown" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <!-- Example -->
+                <div class="mt-4 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Ví dụ giao tiếp</span>
+                    <button type="button" id="btn-speak-example" class="text-xs font-medium text-rose-600 hover:text-rose-700">
+                      🔊 Nghe câu
+                    </button>
+                  </div>
+                  <div id="back-example-zh" class="hanzi-font text-sm sm:text-base font-medium text-slate-900"></div>
+                  <div id="back-example-py" class="text-xs text-rose-600 mt-0.5"></div>
+                  <div id="back-example-vi" class="text-xs text-slate-600 mt-0.5"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <button id="btn-prev" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition">
+            ← Trước
+          </button>
+
+          <div class="flex items-center gap-2">
+            <button id="btn-mark-learning" class="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-800 text-xs font-semibold transition">
+              ↺ Cần ôn lại
+            </button>
+            <button id="btn-mark-mastered" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
+              ✓ Đã thuộc
+            </button>
+          </div>
+
+          <button id="btn-next" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition">
+            Tiếp →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRACTICE VIEW (VI -> ZH SPEAK / WRITE / HANDWRITING) -->
+    <section id="view-practice" class="hidden space-y-4">
+      <div id="practice-empty" class="hidden bg-white rounded-2xl border border-slate-200 p-10 text-center">
+        <p class="text-slate-600 text-sm mb-3">Không có thẻ nào khớp với bộ lọc để luyện tập.</p>
+        <button id="btn-practice-reset" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
+          Xem tất cả thẻ
+        </button>
+      </div>
+
+      <div id="practice-wrapper" class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5">
+        <!-- Top bar: index, score, hint buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500">Câu <strong id="prac-index-label" class="text-slate-800">1 / 1</strong></span>
+            <span id="prac-topic-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">Giao tiếp</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="btn-prac-hint-py" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition">
+              💡 Gợi ý Pinyin
+            </button>
+            <button type="button" id="btn-prac-hint-memo" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition">
+              🧠 Gợi ý mẹo nhớ
+            </button>
+          </div>
+        </div>
+
+        <!-- Prompt: Vietnamese Meaning -->
+        <div class="text-center py-3">
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Hãy đọc hoặc gõ câu tiếng Trung tương ứng với câu tiếng Việt sau:</div>
+          <div id="prac-meaning" class="text-xl sm:text-2xl font-bold text-slate-900">Sắc mặt, nét mặt</div>
+          <div id="prac-hint-box" class="hidden mt-2.5 inline-block px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900"></div>
+        </div>
+
+        <!-- Mode Selector Tabs (Write / Speak / Draw) -->
+        <div class="flex items-center justify-center gap-2">
+          <button type="button" id="btn-mode-type" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white transition">
+            ⌨️ Gõ chữ Hán / Pinyin
+          </button>
+          <button type="button" id="btn-mode-speak" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            🎙️ Luyện đọc (Mic)
+          </button>
+          <button type="button" id="btn-mode-draw" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            ✍️ Tập viết tay
+          </button>
+        </div>
+
+        <!-- Sub-panel 1: Type Hanzi or Pinyin -->
+        <div id="panel-mode-type" class="space-y-3 max-w-md mx-auto">
+          <div class="flex gap-2">
+            <input id="prac-input" type="text" placeholder="Gõ câu chữ Hán hoặc Pinyin không dấu (vd: zhege chicun budui)..." class="flex-1 text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500 hanzi-font" />
+            <button type="button" id="btn-prac-check" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition shrink-0">
+              Kiểm tra
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400 text-center">Mẹo: Bạn có thể gõ trực tiếp chữ Hán hoặc gõ Pinyin không dấu đều được chấm.</p>
+        </div>
+
+        <!-- Sub-panel 2: Speak via Microphone -->
+        <div id="panel-mode-speak" class="hidden space-y-3 text-center max-w-md mx-auto">
+          <button type="button" id="btn-prac-mic" class="mx-auto px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+            <span id="mic-icon">🎙️</span>
+            <span id="mic-label">Nhấn để đọc tiếng Trung</span>
+          </button>
+          <div id="prac-speech-transcript" class="text-xs text-slate-600 min-h-[20px]"></div>
+          <p class="text-[11px] text-slate-400">Yêu cầu trình duyệt Chrome/Edge/Safari cấp quyền Micro. Nếu trình duyệt chặn mic trong khung xem trước, hãy tải file HTML mở ngoài trình duyệt.</p>
+        </div>
+
+        <!-- Sub-panel 3: Handwriting Canvas -->
+        <div id="panel-mode-draw" class="hidden space-y-2.5 text-center">
+          <div class="relative inline-block">
+            <canvas id="handwriting-canvas" width="280" height="200" class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl touch-none cursor-crosshair mx-auto"></canvas>
+          </div>
+          <div class="flex items-center justify-center gap-2">
+            <button type="button" id="btn-clear-canvas" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+              Xóa nét vẽ
+            </button>
+            <button type="button" id="btn-reveal-from-draw" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition">
+              Đối chiếu đáp án
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">Dùng ngón tay hoặc chuột viết chữ Hán lên ô vuông rồi bấm Đối chiếu đáp án.</p>
+        </div>
+
+        <!-- Feedback / Answer Reveal Box -->
+        <div id="prac-feedback" class="hidden rounded-2xl p-4 border space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div id="prac-feedback-title" class="text-xs font-bold"></div>
+            <button type="button" id="btn-prac-speak-ans" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition">
+              🔊 Nghe chuẩn
+            </button>
+          </div>
+          <div class="flex items-baseline gap-3">
+            <span id="prac-ans-hanzi" class="hanzi-font text-2xl sm:text-3xl font-bold text-slate-900"></span>
+            <span id="prac-ans-pinyin" class="text-sm font-semibold text-rose-600"></span>
+          </div>
+          <div id="prac-ans-breakdown" class="text-xs text-slate-600 space-y-1 pt-1"></div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+          <button type="button" id="btn-prac-prev" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+            ← Câu trước
+          </button>
+          <button type="button" id="btn-prac-show-ans" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+            👁️ Xem đáp án
+          </button>
+          <button type="button" id="btn-prac-next" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
+            Câu tiếp →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIST VIEW -->
+    <section id="view-list" class="hidden space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-3 rounded-2xl border border-slate-200">
+        <input id="search-input" type="text" placeholder="Tìm chữ Hán, Pinyin hoặc nghĩa..." class="flex-1 min-w-[200px] text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500" />
+        <button id="btn-export-json" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+          Tải xuống JSON
+        </button>
+      </div>
+
+      <div id="word-list-container" class="grid grid-cols-1 gap-2.5">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+  </main>
+
+  <!-- IMPORT MODAL -->
+  <div id="import-modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-xl border border-slate-200 p-5 sm:p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-bold text-slate-900">Nhập từ mới từ Gemini Live</h2>
+        <button id="btn-close-import" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold">
+          ✕
+        </button>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold text-slate-800">Bước 1: Copy câu lệnh này gửi cho Gemini sau buổi nói chuyện</span>
+          <button id="btn-copy-prompt" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-semibold hover:bg-slate-800 transition shrink-0">
+            Copy Prompt
+          </button>
+        </div>
+        <pre id="gemini-prompt-template" class="text-[11px] text-slate-600 whitespace-pre-wrap bg-white p-2.5 rounded-xl border border-slate-200 leading-relaxed">Từ cuộc trò chuyện vừa rồi (hoặc theo chủ đề tôi yêu cầu), hãy tạo danh sách các CÂU GIAO TIẾP tiếng Trung thực tế (đời sống hoặc kỹ thuật bản vẽ cơ khí, kích thước, khoảng cách, dung sai) ra mảng JSON theo đúng mẫu sau (chỉ trả về JSON). Phần "breakdown" phân tích các chữ Hán cốt lõi trong câu kèm mẹo nhớ kiểu Hanzii:
+[
+  {
+    "hanzi": "这两个孔之间的中心距是多少毫米？",
+    "pinyin": "Zhè liǎng gè kǒng zhījiān de zhōngxīnjù shì duōshao háomǐ?",
+    "meaning": "Khoảng cách tâm giữa hai lỗ này là bao nhiêu mm?",
+    "topic": "Bản vẽ & Kích thước",
+    "breakdown": [
+      {"char": "孔", "radical": "子 (Tử)", "strokes": 4, "note": "Đứa con (子) chui qua cái móc (乚) tạo thành cái LỖ (孔)."},
+      {"char": "距", "radical": "足 (Túc - chân)", "strokes": 11, "note": "Bước chân (足) đo khoảng cách lớn (巨) -> KHOẢNG CÁCH (距)."}
+    ],
+    "exampleZh": "图纸上标的是五十毫米。",
+    "examplePy": "Túzhǐ shàng biāo de shì wǔshí háomǐ.",
+    "exampleVi": "Câu trả lời mẫu: Trên bản vẽ ghi là 50 mm."
+  }
+]</pre>
+      </div>
+
+      <div class="space-y-2">
+        <label for="import-textarea" class="block text-xs font-semibold text-slate-800">
+          Bước 2: Dán kết quả JSON (hoặc dạng từng dòng: <code class="bg-slate-100 px-1 rounded">Hán tự | Pinyin | Nghĩa</code>) vào đây
+        </label>
+        <textarea id="import-textarea" rows="6" placeholder='Dán JSON từ Gemini hoặc nhập nhanh:&#10;激光 | jīguāng | Tia laser&#10;报价 | bàojià | Báo giá' class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"></textarea>
+        <p id="import-error" class="text-xs text-rose-600 hidden"></p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button id="btn-cancel-import" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+          Hủy
+        </button>
+        <button id="btn-submit-import" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition">
+          Thêm vào bộ thẻ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'quang_zh_flashcards_v4';
+
+    const DEFAULT_CARDS = [
+      {
+        id: 'card-0',
+        hanzi: '请把这张CAD图纸发给我看一下。',
+        pinyin: 'Qǐng bǎ zhè zhāng CAD túzhǐ fā gěi wǒ kàn yīxià.',
+        meaning: 'Làm ơn gửi bản vẽ CAD này cho tôi xem một chút.',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '图', radical: '囗 (Vi - vây quanh)', strokes: 8, note: 'Đóng khung bốn phía (囗) vẽ bản đồ mùa đông (冬) -> BẢN VẼ (图).' },
+          { char: '纸', radical: '纟 (Mịch - tơ)', strokes: 7, note: 'Se sợi tơ (纟) mỏng cho từng họ tộc (氏) viết chữ -> TỜ GIẤY (纸).' }
+        ],
+        exampleZh: '好的，我马上发原文件给你。',
+        examplePy: 'Hǎo de, wǒ mǎshàng fā yuán wénjiàn gěi nǐ.',
+        exampleVi: 'Phản hồi: Ok, tôi gửi file gốc cho bạn ngay đây.'
+      },
+      {
+        id: 'card-1',
+        hanzi: '这两个孔之间的中心距是多少毫米？',
+        pinyin: 'Zhè liǎng gè kǒng zhījiān de zhōngxīnjù shì duōshao háomǐ?',
+        meaning: 'Khoảng cách tâm giữa hai lỗ này là bao nhiêu mi-li-mét (mm)?',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '孔', radical: '子 (Tử)', strokes: 4, note: 'Đứa trẻ (子) thò tay vào khe móc (乚) -> CÁI LỖ (孔).' },
+          { char: '距', radical: '足 (Túc - chân)', strokes: 11, note: 'Dùng bàn chân (足) bước đo cự ly lớn (巨) -> KHOẢNG CÁCH (距).' },
+          { char: '毫', radical: '毛 (Mao - sợi lông)', strokes: 11, note: 'Cao (高) nhưng mỏng nhỏ như sợi lông (毛) -> MI-LI (毫).' }
+        ],
+        exampleZh: '中心距是一百五十毫米。',
+        examplePy: 'Zhōngxīnjù shì yībǎi wǔshí háomǐ.',
+        exampleVi: 'Phản hồi: Khoảng cách tâm là 150 mm.'
+      },
+      {
+        id: 'card-2',
+        hanzi: '这个尺寸不对，比图纸短了五毫米。',
+        pinyin: 'Zhège chǐcùn bù duì, bǐ túzhǐ duǎn le wǔ háomǐ.',
+        meaning: 'Kích thước này không đúng, bị ngắn hơn bản vẽ 5 mm rồi.',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '尺', radical: '尸 (Thi)', strokes: 4, note: 'Cái thước đo có vạch chia -> THƯỚC / KÍCH THƯỚC (尺).' },
+          { char: '寸', radical: '寸 (Thốn - tấc)', strokes: 3, note: 'Đo một tấc (寸) ngay cổ tay -> KÍCH CỠ (尺寸).' },
+          { char: '短', radical: '矢 (Thỉ - mũi tên)', strokes: 12, note: 'Mũi tên (矢) chỉ dài bằng hạt đậu (豆) -> NGẮN (短).' }
+        ],
+        exampleZh: '不好意思，我马上重新切一件。',
+        examplePy: 'Bù hǎoyìsi, wǒ mǎshàng chóngxīn qiē yī jiàn.',
+        exampleVi: 'Phản hồi: Xin lỗi nhé, để tôi cắt lại phôi khác ngay.'
+      },
+      {
+        id: 'card-3',
+        hanzi: '长、宽、高分别是多少厘米？',
+        pinyin: 'Cháng, kuān, gāo fēnbié shì duōshao límǐ?',
+        meaning: 'Chiều dài, chiều rộng, chiều cao lần lượt là bao nhiêu cm?',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '宽', radical: '宀 (Miên - mái nhà)', strokes: 10, note: 'Dưới mái nhà (宀) trồng cỏ (艹) mà vẫn nhìn thấy (见) thoáng đãng -> RỘNG (宽).' },
+          { char: '高', radical: '高 (Cao)', strokes: 10, note: 'Hình tòa tháp hai tầng có mái nhọn -> CHIỀU CAO (高).' },
+          { char: '厘', radical: '厂 (Hán)', strokes: 9, note: 'Bên sườn núi (厂) chia từng dặm nhỏ (里) -> XĂNG-TI (厘米).' }
+        ],
+        exampleZh: '长一米，宽七十厘米，高八十厘米。',
+        examplePy: 'Cháng yī mǐ, kuān qīshí límǐ, gāo bāshí límǐ.',
+        exampleVi: 'Phản hồi: Dài 1 mét, rộng 70 cm, cao 80 cm.'
+      },
+      {
+        id: 'card-4',
+        hanzi: '方管的壁厚是一点四毫米。',
+        pinyin: 'Fāngguǎn de bìhòu shì yī diǎn sì háomǐ.',
+        meaning: 'Độ dày thành của thép hộp vuông là 1.4 mm.',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '管', radical: '⺮ (Trúc - tre)', strokes: 14, note: 'Ống tre (⺮) dùng trong quan phủ (官) -> ỐNG THÉP (管).' },
+          { char: '壁', radical: '土 (Thổ - đất)', strokes: 16, note: 'Đất (土) đắp dựng lên thành vách -> VÁCH / THÀNH ỐNG (壁).' },
+          { char: '厚', radical: '厂 (Hán - sườn núi)', strokes: 9, note: 'Vách đá (厂) phơi dưới nắng mặt trời (日) cho đứa con (子) đứng -> DÀY (厚).' }
+        ],
+        exampleZh: '表面需要做白色静电喷涂。',
+        examplePy: 'Biǎomiàn xūyào zuò báisè jìngdiàn pēntú.',
+        exampleVi: 'Mở rộng: Bề mặt cần sơn tĩnh điện màu trắng.'
+      },
+      {
+        id: 'card-5',
+        hanzi: '离边距离要留二十毫米的余量。',
+        pinyin: 'Lí biān jùlí yào liú èrshí háomǐ de yúliàng.',
+        meaning: 'Khoảng cách cách mép phải chừa lại 20 mm lượng dư.',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '离', radical: '禸 (Nhựu)', strokes: 10, note: 'Chim rời khỏi lưới -> CÁCH / RỜI KHỎI (离).' },
+          { char: '边', radical: '辶 (Sước - bước đi)', strokes: 5, note: 'Dùng sức (力) bước đi (辶) sát rìa -> MÉP / CẠNH (边).' },
+          { char: '余', radical: '人 (Nhân)', strokes: 7, note: 'Dưới mái nhà (人) lúa gạo chất đầy cây (木) -> DƯ THỪA / LƯỢNG DƯ (余).' }
+        ],
+        exampleZh: '明白，焊接的时候会注意的。',
+        examplePy: 'Míngbai, hànjiē de shíhou huì zhùyì de.',
+        exampleVi: 'Phản hồi: Đã rõ, lúc hàn sẽ chú ý chỗ này.'
+      },
+      {
+        id: 'card-6',
+        hanzi: '卡口配合的间隙留零点二毫米够不够？',
+        pinyin: 'Kǎkǒu pèihé de jiànxì liú líng diǎn èr háomǐ gòu bù gòu?',
+        meaning: 'Khe hở lắp ghép của ngàm (tab & slot) để 0.2 mm có đủ không?',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '间', radical: '门 (Môn - cửa)', strokes: 7, note: 'Ánh mặt trời (日) lọt qua khe cửa (门) -> KHE HỞ / KHOẢNG GIỮA (间).' },
+          { char: '隙', radical: '阝 (Phụ - gò đất)', strokes: 12, note: 'Bên vách đất (阝) có tia nắng nhỏ (小+日) chiếu qua -> KHE HỞ ĐỘ RƠ (隙).' }
+        ],
+        exampleZh: '零点二毫米刚好，激光切割很准。',
+        examplePy: 'Líng diǎn èr háomǐ gānghǎo, jīguāng qiēgē hěn zhǔn.',
+        exampleVi: 'Phản hồi: 0.2 mm là vừa khít, cắt laser rất chuẩn.'
+      },
+      {
+        id: 'sent-8',
+        hanzi: '这个位置的公差要求很严，不能超差。',
+        pinyin: 'Zhège wèizhì de gōngchā yāoqiú hěn yán, bù néng chāochā.',
+        meaning: 'Dung sai ở vị trí này yêu cầu rất gắt, không được vượt quá dung sai.',
+        topic: 'Bản vẽ & Kích thước',
+        status: 'learning',
+        breakdown: [
+          { char: '公', radical: '八 (Bát)', strokes: 4, note: 'Chia tám phần (八) cho riêng tư (厶) thành của CHUNG (公).' },
+          { char: '差', radical: '工 (Công)', strokes: 9, note: 'Con dê (羊) làm việc (工) lệch chuẩn -> SAI LỆCH / DUNG SAI (公差).' },
+          { char: '严', radical: '一 (Nhất)', strokes: 7, note: 'Mọi quy tắc đặt lên hàng đầu -> NGHIÊM NGẶT (严).' }
+        ],
+        exampleZh: '放心吧，加工完我会用卡尺量一下。',
+        examplePy: 'Fàngxīn ba, jiāgōng wán wǒ huì yòng kǎchǐ liáng yīxià.',
+        exampleVi: 'Phản hồi: Yên tâm đi, gia công xong tôi sẽ lấy thước cặp đo kiểm lại.'
+      },
+      {
+        id: 'sent-9',
+        hanzi: '不好意思，你说话太快了，能慢一点吗？',
+        pinyin: 'Bù hǎoyìsi, nǐ shuōhuà tài kuài le, néng màn yīdiǎn ma?',
+        meaning: 'Xin lỗi, bạn nói nhanh quá, có thể nói chậm lại một chút được không?',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '快', radical: '忄 (Tâm đứng)', strokes: 7, note: 'Trong lòng (忄) quyết định dứt khoát (夬) -> NHANH (快).' },
+          { char: '慢', radical: '忄 (Tâm đứng)', strokes: 14, note: 'Trong lòng (忄) cứ từ từ kéo dài (曼) -> CHẬM (慢).' }
+        ],
+        exampleZh: '没问题，我慢慢说。',
+        examplePy: 'Méi wèntí, wǒ mànmàn shuō.',
+        exampleVi: 'Phản hồi: Không vấn đề gì, để tôi nói chậm lại.'
+      },
+      {
+        id: 'sent-10',
+        hanzi: '这台设备保修多久？坏了怎么处理？',
+        pinyin: 'Zhè tái shèbèi bǎoxiū duōjiǔ? Huài le zěnme chǔlǐ?',
+        meaning: 'Thiết bị này bảo hành bao lâu? Nếu hỏng thì xử lý thế nào?',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '保', radical: '亻 (Nhân)', strokes: 9, note: 'Người lớn (亻) ôm đứa trẻ ngốc (呆) để BẢO VỆ / BẢO HÀNH (保).' },
+          { char: '坏', radical: '土 (Thổ - đất)', strokes: 7, note: 'Đất (土) mà không (不) tốt nữa là HỎNG (坏).' }
+        ],
+        exampleZh: '整机保修一年，有问题我们上门维修。',
+        examplePy: 'Zhěngjī bǎoxiū yī nián, yǒu wèntí wǒmen shàngmén wéixiū.',
+        exampleVi: 'Phản hồi: Bảo hành toàn máy 1 năm, có lỗi bên tôi đến tận nơi sửa.'
+      },
+      {
+        id: 'sent-11',
+        hanzi: '我下班了，今天累死了，想早点休息。',
+        pinyin: 'Wǒ xiàbān le, jīntiān lèi sǐ le, xiǎng zǎodiǎn xiūxi.',
+        meaning: 'Tôi tan làm rồi, hôm nay mệt rã rời, muốn nghỉ ngơi sớm một chút.',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '累', radical: '纟 (Mịch - tơ)', strokes: 11, note: 'Làm ruộng (田) xong lại xe tơ (糸) suốt ngày -> MỆT MỎI (累).' },
+          { char: '休', radical: '亻 (Nhân - người)', strokes: 6, note: 'Người (亻) tựa lưng vào gốc cây (木) -> NGHỈ NGƠI (休).' }
+        ],
+        exampleZh: '辛苦了，快回家吃饭休息吧！',
+        examplePy: 'Xīnkǔ le, kuài huí jiā chīfàn xiūxi ba!',
+        exampleVi: 'Phản hồi: Vất vả rồi, mau về nhà ăn cơm nghỉ ngơi đi!'
+      },
+      {
+        id: 'sent-12',
+        hanzi: '这个周末你有空吗？我们出去喝杯咖啡吧。',
+        pinyin: 'Zhège zhōumò nǐ yǒukòng ma? Wǒmen chūqù hē bēi kāfēi ba.',
+        meaning: 'Cuối tuần này bạn có rảnh không? Chúng mình ra ngoài uống ly cà phê nhé.',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '空', radical: '穴 (Huyệt - mái hang)', strokes: 8, note: 'Đào hang (穴) tốn công sức (工) tạo ra khoảng TRỐNG / RẢNH RỖI (空).' },
+          { char: '喝', radical: '口 (Khẩu - miệng)', strokes: 12, note: 'Há miệng (口) khi nắng khát (曷) để UỐNG NƯỚC (喝).' }
+        ],
+        exampleZh: '好啊，周六下午两点怎么样？',
+        examplePy: 'Hǎo a, zhōuliù xiàwǔ liǎng diǎn zěnmeyàng?',
+        exampleVi: 'Phản hồi: Được đấy, 2 giờ chiều thứ Bảy thấy sao?'
+      }
+    ];
+
+    let cards = [];
+    let currentIndex = 0;
+    let isFlipped = false;
+    let currentTopic = 'all';
+    let currentStatus = 'all';
+    let currentTab = 'study';
+
+    function loadCards() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            cards = parsed;
+            return;
+          }
+        }
+      } catch (e) {
+        // Fallback to default cards
+      }
+      cards = JSON.parse(JSON.stringify(DEFAULT_CARDS));
+    }
+
+    function saveCards() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+      } catch (e) {
+        // Ignore storage quota / sandbox restrictions
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2400);
+    }
+
+    function speakZh(text, rate = 1.0) {
+      if (!('speechSynthesis' in window) || !text) {
+        showToast('Trình duyệt không hỗ trợ đọc giọng nói.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = rate;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function getFilteredCards() {
+      return cards.filter(c => {
+        const matchTopic = currentTopic === 'all' || c.topic === currentTopic;
+        const matchStatus = currentStatus === 'all' || c.status === currentStatus;
+        return matchTopic && matchStatus;
+      });
+    }
+
+    function updateTopicOptions() {
+      const select = document.getElementById('topic-filter');
+      const topics = Array.from(new Set(cards.map(c => c.topic || 'Chung')));
+      const prev = select.value;
+      select.innerHTML = '<option value="all">Tất cả chủ đề</option>';
+      topics.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        select.appendChild(opt);
+      });
+      if (topics.includes(prev)) {
+        select.value = prev;
+      } else {
+        select.value = 'all';
+        currentTopic = 'all';
+      }
+    }
+
+    function updateStats() {
+      const total = cards.length;
+      const mastered = cards.filter(c => c.status === 'mastered').length;
+      document.getElementById('total-count-badge').textContent = total;
+      document.getElementById('mastered-stat').textContent = `${mastered}/${total}`;
+      const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+      document.getElementById('mastery-bar').style.width = `${pct}%`;
+    }
+
+    function renderStudyCard() {
+      const filtered = getFilteredCards();
+      const emptyEl = document.getElementById('study-empty');
+      const wrapperEl = document.getElementById('study-card-wrapper');
+
+      if (filtered.length === 0) {
+        emptyEl.classList.remove('hidden');
+        wrapperEl.classList.add('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      wrapperEl.classList.remove('hidden');
+
+      if (currentIndex >= filtered.length) currentIndex = 0;
+      if (currentIndex < 0) currentIndex = filtered.length - 1;
+
+      const card = filtered[currentIndex];
+      document.getElementById('card-index-label').textContent = `${currentIndex + 1} / ${filtered.length}`;
+
+      // Front
+      document.getElementById('front-topic').textContent = card.topic || 'Chung';
+      const badge = document.getElementById('front-status-badge');
+      if (card.status === 'mastered') {
+        badge.textContent = '✓ Đã thuộc';
+        badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700';
+      } else {
+        badge.textContent = 'Cần ôn lại';
+        badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700';
+      }
+
+      document.getElementById('front-hanzi').textContent = card.hanzi;
+      const showPy = document.getElementById('toggle-pinyin-front').checked;
+      const frontPy = document.getElementById('front-pinyin');
+      frontPy.textContent = card.pinyin || '';
+      frontPy.classList.toggle('invisible', !showPy);
+
+      // Back
+      document.getElementById('back-hanzi').textContent = card.hanzi;
+      document.getElementById('back-pinyin').textContent = card.pinyin || '';
+      document.getElementById('back-meaning').textContent = card.meaning || '';
+
+      const breakdownEl = document.getElementById('back-hanzi-breakdown');
+      breakdownEl.innerHTML = '';
+      if (Array.isArray(card.breakdown) && card.breakdown.length > 0) {
+        card.breakdown.forEach(b => {
+          const item = document.createElement('div');
+          item.className = 'p-2.5 rounded-xl bg-rose-50/60 border border-rose-100 flex items-start gap-2.5';
+          item.innerHTML = `
+            <div class="w-10 h-10 rounded-lg bg-white border border-rose-200 flex items-center justify-center hanzi-font text-xl font-bold text-slate-900 shrink-0">${escapeHtml(b.char || '')}</div>
+            <div class="min-w-0 text-xs">
+              <div class="font-semibold text-slate-800">Bộ: ${escapeHtml(b.radical || 'Đang cập nhật')} ${b.strokes ? `· ${b.strokes} nét` : ''}</div>
+              <div class="text-slate-600 mt-0.5 leading-snug">${escapeHtml(b.note || '')}</div>
+            </div>
+          `;
+          breakdownEl.appendChild(item);
+        });
+      } else {
+        const fallback = document.createElement('div');
+        fallback.className = 'col-span-full text-xs text-slate-500 italic';
+        fallback.textContent = 'Chưa có dữ liệu chiết tự cho từ này.';
+        breakdownEl.appendChild(fallback);
+      }
+
+      document.getElementById('back-example-zh').textContent = card.exampleZh || 'Chưa có câu ví dụ.';
+      document.getElementById('back-example-py').textContent = card.examplePy || '';
+      document.getElementById('back-example-vi').textContent = card.exampleVi || '';
+
+      // Reset flip state
+      const flashcard = document.getElementById('flashcard');
+      isFlipped = false;
+      flashcard.classList.remove('rotate-y-180');
+    }
+
+    function renderWordList() {
+      const container = document.getElementById('word-list-container');
+      const query = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const filtered = getFilteredCards().filter(c => {
+        if (!query) return true;
+        return (
+          (c.hanzi || '').toLowerCase().includes(query) ||
+          (c.pinyin || '').toLowerCase().includes(query) ||
+          (c.meaning || '').toLowerCase().includes(query)
+        );
+      });
+
+      container.innerHTML = '';
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-500">Không tìm thấy từ vựng phù hợp.</div>';
+        return;
+      }
+
+      filtered.forEach(card => {
+        const row = document.createElement('div');
+        row.className = 'bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs';
+        const breakdownSummary = Array.isArray(card.breakdown)
+          ? card.breakdown.map(b => `${b.char} (${b.radical || ''})`).join(' · ')
+          : '';
+        row.innerHTML = `
+          <div class="flex items-start gap-3 min-w-0 flex-1">
+            <button type="button" data-speak="${escapeHtml(card.hanzi)}" class="w-12 h-12 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 hanzi-font text-xl font-bold flex items-center justify-center shrink-0 transition" title="Nghe phát âm">
+              ${escapeHtml(card.hanzi.slice(0, 2))}
+            </button>
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-baseline gap-2">
+                <span class="hanzi-font text-base font-bold text-slate-900">${escapeHtml(card.hanzi)}</span>
+                <span class="text-xs font-semibold text-rose-600">${escapeHtml(card.pinyin || '')}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">${escapeHtml(card.topic || 'Chung')}</span>
+              </div>
+              <div class="text-xs font-medium text-slate-800 mt-0.5">${escapeHtml(card.meaning || '')}</div>
+              ${breakdownSummary ? `<div class="text-[11px] text-slate-500 mt-1">Chiết tự: ${escapeHtml(breakdownSummary)}</div>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" data-toggle-id="${card.id}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition ${card.status === 'mastered' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+              ${card.status === 'mastered' ? '✓ Đã thuộc' : 'Cần ôn'}
+            </button>
+            <button type="button" data-delete-id="${card.id}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 transition">
+              Xóa
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function flipCard() {
+      const flashcard = document.getElementById('flashcard');
+      isFlipped = !isFlipped;
+      flashcard.classList.toggle('rotate-y-180', isFlipped);
+    }
+
+    function markCurrentCard(status) {
+      const filtered = getFilteredCards();
+      if (filtered.length === 0) return;
+      const card = filtered[currentIndex];
+      const target = cards.find(c => c.id === card.id);
+      if (target) {
+        target.status = status;
+        saveCards();
+        updateStats();
+      }
+      if (currentIndex < filtered.length - 1) {
+        currentIndex += 1;
+      } else {
+        currentIndex = 0;
+      }
+      renderStudyCard();
+      if (currentTab === 'list') renderWordList();
+    }
+
+    let practiceMode = 'type'; // 'type' | 'speak' | 'draw'
+
+    function stripTones(str) {
+      return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '')
+        .toLowerCase();
+    }
+
+    function renderPracticeCard() {
+      const filtered = getFilteredCards();
+      const emptyEl = document.getElementById('practice-empty');
+      const wrapperEl = document.getElementById('practice-wrapper');
+
+      if (filtered.length === 0) {
+        emptyEl.classList.remove('hidden');
+        wrapperEl.classList.add('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+      wrapperEl.classList.remove('hidden');
+
+      if (currentIndex >= filtered.length) currentIndex = 0;
+      if (currentIndex < 0) currentIndex = filtered.length - 1;
+
+      const card = filtered[currentIndex];
+      document.getElementById('prac-index-label').textContent = `${currentIndex + 1} / ${filtered.length}`;
+      document.getElementById('prac-topic-badge').textContent = card.topic || 'Chung';
+      document.getElementById('prac-meaning').textContent = card.meaning || '';
+
+      document.getElementById('prac-hint-box').classList.add('hidden');
+      document.getElementById('prac-feedback').classList.add('hidden');
+      document.getElementById('prac-input').value = '';
+      document.getElementById('prac-speech-transcript').textContent = '';
+      clearHandwritingCanvas();
+    }
+
+    function showPracticeFeedback(card, isCorrect, customTitle) {
+      const fb = document.getElementById('prac-feedback');
+      const titleEl = document.getElementById('prac-feedback-title');
+      fb.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'bg-rose-50', 'border-rose-200', 'bg-slate-50', 'border-slate-200');
+
+      if (isCorrect === true) {
+        fb.classList.add('bg-emerald-50', 'border-emerald-200');
+        titleEl.className = 'text-xs font-bold text-emerald-700';
+        titleEl.textContent = customTitle || '🎉 Chính xác! Bạn nhớ từ rất tốt.';
+      } else if (isCorrect === false) {
+        fb.classList.add('bg-rose-50', 'border-rose-200');
+        titleEl.className = 'text-xs font-bold text-rose-700';
+        titleEl.textContent = customTitle || 'Chưa khớp, hãy xem đáp án bên dưới nhé:';
+      } else {
+        fb.classList.add('bg-slate-50', 'border-slate-200');
+        titleEl.className = 'text-xs font-bold text-slate-700';
+        titleEl.textContent = customTitle || 'Đáp án & Mẹo nhớ Hán tự:';
+      }
+
+      document.getElementById('prac-ans-hanzi').textContent = card.hanzi;
+      document.getElementById('prac-ans-pinyin').textContent = card.pinyin || '';
+
+      const bdEl = document.getElementById('prac-ans-breakdown');
+      bdEl.innerHTML = '';
+      if (Array.isArray(card.breakdown) && card.breakdown.length > 0) {
+        card.breakdown.forEach(b => {
+          const line = document.createElement('div');
+          line.innerHTML = `<strong class="hanzi-font text-slate-900">${escapeHtml(b.char)}</strong> (${escapeHtml(b.radical || '')}): ${escapeHtml(b.note || '')}`;
+          bdEl.appendChild(line);
+        });
+      }
+      speakZh(card.hanzi, 1.0);
+    }
+
+    function cleanChinesePunct(str) {
+      return String(str || '').replace(/[\s，。？！、,.?!：:；;“”"']/g, '');
+    }
+
+    function calcCharOverlap(userStr, targetStr) {
+      if (!userStr || !targetStr) return 0;
+      let hit = 0;
+      for (const ch of targetStr) {
+        if (userStr.includes(ch)) hit++;
+      }
+      return hit / targetStr.length;
+    }
+
+    function checkTypedAnswer() {
+      const filtered = getFilteredCards();
+      if (filtered.length === 0) return;
+      const card = filtered[currentIndex];
+      const userRaw = (document.getElementById('prac-input').value || '').trim();
+      if (!userRaw) {
+        showToast('Hãy nhập câu chữ Hán hoặc Pinyin trước khi kiểm tra!');
+        return;
+      }
+      const cleanUser = cleanChinesePunct(userRaw);
+      const cleanHanzi = cleanChinesePunct(card.hanzi);
+      const isHanziMatch = cleanUser === cleanHanzi;
+      const overlap = calcCharOverlap(cleanUser, cleanHanzi);
+      const isPinyinMatch = stripTones(userRaw) === stripTones(card.pinyin) && stripTones(card.pinyin).length > 0;
+
+      if (isHanziMatch) {
+        showPracticeFeedback(card, true, '🎉 Chính xác tuyệt đối! Bạn viết đúng cả câu chữ Hán.');
+      } else if (isPinyinMatch) {
+        showPracticeFeedback(card, true, '✅ Đúng toàn bộ Pinyin câu! Hãy đối chiếu mặt chữ Hán nhé:');
+      } else if (overlap >= 0.75) {
+        showPracticeFeedback(card, true, `👍 Gần chuẩn (${Math.round(overlap * 100)}% chữ Hán khớp)! Xem lại câu đầy đủ nhé:`);
+      } else {
+        showPracticeFeedback(card, false, `Bạn nhập "${userRaw}" — hãy đối chiếu với câu chuẩn bên dưới:`);
+      }
+    }
+
+    function setPracticeSubMode(mode) {
+      practiceMode = mode;
+      const pType = document.getElementById('panel-mode-type');
+      const pSpeak = document.getElementById('panel-mode-speak');
+      const pDraw = document.getElementById('panel-mode-draw');
+      const bType = document.getElementById('btn-mode-type');
+      const bSpeak = document.getElementById('btn-mode-speak');
+      const bDraw = document.getElementById('btn-mode-draw');
+
+      const activeCls = 'px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white transition';
+      const inactiveCls = 'px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+
+      pType.classList.toggle('hidden', mode !== 'type');
+      pSpeak.classList.toggle('hidden', mode !== 'speak');
+      pDraw.classList.toggle('hidden', mode !== 'draw');
+
+      bType.className = mode === 'type' ? activeCls : inactiveCls;
+      bSpeak.className = mode === 'speak' ? activeCls : inactiveCls;
+      bDraw.className = mode === 'draw' ? activeCls : inactiveCls;
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const studyView = document.getElementById('view-study');
+      const pracView = document.getElementById('view-practice');
+      const listView = document.getElementById('view-list');
+      const btnStudy = document.getElementById('btn-tab-study');
+      const btnPrac = document.getElementById('btn-tab-practice');
+      const btnList = document.getElementById('btn-tab-list');
+
+      const activeCls = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition';
+      const inactiveCls = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+
+      studyView.classList.toggle('hidden', tab !== 'study');
+      pracView.classList.toggle('hidden', tab !== 'practice');
+      listView.classList.toggle('hidden', tab !== 'list');
+
+      btnStudy.className = tab === 'study' ? activeCls : inactiveCls;
+      btnPrac.className = tab === 'practice' ? activeCls : inactiveCls;
+      btnList.className = tab === 'list' ? activeCls : inactiveCls;
+
+      if (tab === 'study') renderStudyCard();
+      else if (tab === 'practice') renderPracticeCard();
+      else renderWordList();
+    }
+
+    function parseAndImport(rawText) {
+      const trimmed = rawText.trim();
+      if (!trimmed) throw new Error('Vui lòng dán nội dung từ vựng trước khi nhập.');
+
+      let imported = [];
+      if (trimmed.startsWith('[') || trimmed.startsWith('{') || trimmed.includes('```')) {
+        const cleaned = trimmed.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        const arr = Array.isArray(parsed) ? parsed : [parsed];
+        imported = arr.map((item, idx) => ({
+          id: `card-${Date.now()}-${idx}`,
+          hanzi: String(item.hanzi || '').trim(),
+          pinyin: String(item.pinyin || '').trim(),
+          meaning: String(item.meaning || '').trim(),
+          topic: String(item.topic || 'Gemini Live').trim(),
+          status: 'learning',
+          breakdown: Array.isArray(item.breakdown) ? item.breakdown : [],
+          exampleZh: String(item.exampleZh || '').trim(),
+          examplePy: String(item.examplePy || '').trim(),
+          exampleVi: String(item.exampleVi || '').trim()
+        })).filter(c => c.hanzi);
+      } else {
+        const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        imported = lines.map((line, idx) => {
+          const parts = line.split('|').map(p => p.trim());
+          if (parts.length < 2) return null;
+          return {
+            id: `card-${Date.now()}-${idx}`,
+            hanzi: parts[0],
+            pinyin: parts[1] || '',
+            meaning: parts[2] || '',
+            topic: parts[3] || 'Gemini Live',
+            status: 'learning',
+            breakdown: [],
+            exampleZh: '',
+            examplePy: '',
+            exampleVi: ''
+          };
+        }).filter(Boolean);
+      }
+
+      if (imported.length === 0) {
+        throw new Error('Không đọc được từ vựng hợp lệ. Hãy kiểm tra lại định dạng JSON hoặc Hán tự | Pinyin | Nghĩa.');
+      }
+
+      cards = [...imported, ...cards];
+      saveCards();
+      updateTopicOptions();
+      updateStats();
+      currentIndex = 0;
+      renderStudyCard();
+      if (currentTab === 'list') renderWordList();
+      return imported.length;
+    }
+
+    // Event bindings
+    document.getElementById('flashcard').addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      flipCard();
+    });
+
+    document.getElementById('btn-speak-front').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered[currentIndex]) speakZh(filtered[currentIndex].hanzi, 1.0);
+    });
+
+    document.getElementById('btn-speak-slow').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered[currentIndex]) speakZh(filtered[currentIndex].hanzi, 0.68);
+    });
+
+    document.getElementById('btn-speak-back').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered[currentIndex]) speakZh(filtered[currentIndex].hanzi, 1.0);
+    });
+
+    document.getElementById('btn-speak-example').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered[currentIndex] && filtered[currentIndex].exampleZh) {
+        speakZh(filtered[currentIndex].exampleZh, 0.95);
+      }
+    });
+
+    document.getElementById('toggle-pinyin-front').addEventListener('change', () => {
+      const showPy = document.getElementById('toggle-pinyin-front').checked;
+      document.getElementById('front-pinyin').classList.toggle('invisible', !showPy);
+    });
+
+    document.getElementById('btn-prev').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered.length === 0) return;
+      currentIndex = (currentIndex - 1 + filtered.length) % filtered.length;
+      renderStudyCard();
+    });
+
+    document.getElementById('btn-next').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered.length === 0) return;
+      currentIndex = (currentIndex + 1) % filtered.length;
+      renderStudyCard();
+    });
+
+    document.getElementById('btn-mark-learning').addEventListener('click', () => markCurrentCard('learning'));
+    document.getElementById('btn-mark-mastered').addEventListener('click', () => markCurrentCard('mastered'));
+
+    document.getElementById('btn-shuffle').addEventListener('click', () => {
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      currentIndex = 0;
+      saveCards();
+      renderStudyCard();
+      showToast('Đã xáo trộn thứ tự thẻ');
+    });
+
+    document.getElementById('topic-filter').addEventListener('change', (e) => {
+      currentTopic = e.target.value;
+      currentIndex = 0;
+      renderStudyCard();
+      if (currentTab === 'practice') renderPracticeCard();
+      if (currentTab === 'list') renderWordList();
+    });
+
+    document.getElementById('status-filter').addEventListener('change', (e) => {
+      currentStatus = e.target.value;
+      currentIndex = 0;
+      renderStudyCard();
+      if (currentTab === 'practice') renderPracticeCard();
+      if (currentTab === 'list') renderWordList();
+    });
+
+    document.getElementById('btn-reset-filters').addEventListener('click', () => {
+      currentTopic = 'all';
+      currentStatus = 'all';
+      document.getElementById('topic-filter').value = 'all';
+      document.getElementById('status-filter').value = 'all';
+      currentIndex = 0;
+      renderStudyCard();
+    });
+
+    document.getElementById('btn-tab-study').addEventListener('click', () => switchTab('study'));
+    document.getElementById('btn-tab-practice').addEventListener('click', () => switchTab('practice'));
+    document.getElementById('btn-tab-list').addEventListener('click', () => switchTab('list'));
+
+    // Practice controls
+    document.getElementById('btn-practice-reset').addEventListener('click', () => {
+      currentTopic = 'all';
+      currentStatus = 'all';
+      document.getElementById('topic-filter').value = 'all';
+      document.getElementById('status-filter').value = 'all';
+      currentIndex = 0;
+      renderPracticeCard();
+    });
+
+    document.getElementById('btn-mode-type').addEventListener('click', () => setPracticeSubMode('type'));
+    document.getElementById('btn-mode-speak').addEventListener('click', () => setPracticeSubMode('speak'));
+    document.getElementById('btn-mode-draw').addEventListener('click', () => setPracticeSubMode('draw'));
+
+    document.getElementById('btn-prac-check').addEventListener('click', checkTypedAnswer);
+    document.getElementById('prac-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        checkTypedAnswer();
+      }
+    });
+
+    document.getElementById('btn-prac-hint-py').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (!filtered[currentIndex]) return;
+      const box = document.getElementById('prac-hint-box');
+      box.textContent = `Gợi ý Pinyin: ${filtered[currentIndex].pinyin}`;
+      box.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-prac-hint-memo').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (!filtered[currentIndex]) return;
+      const card = filtered[currentIndex];
+      const box = document.getElementById('prac-hint-box');
+      const notes = Array.isArray(card.breakdown) && card.breakdown.length > 0
+        ? card.breakdown.map(b => b.note).join(' | ')
+        : 'Chưa có mẹo nhớ cho từ này.';
+      box.textContent = `Mẹo nhớ: ${notes}`;
+      box.classList.remove('hidden');
+    });
+
+    document.getElementById('btn-prac-show-ans').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (!filtered[currentIndex]) return;
+      showPracticeFeedback(filtered[currentIndex], null, 'Đáp án & Mẹo nhớ Hán tự:');
+    });
+
+    document.getElementById('btn-prac-speak-ans').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered[currentIndex]) speakZh(filtered[currentIndex].hanzi, 1.0);
+    });
+
+    document.getElementById('btn-prac-prev').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered.length === 0) return;
+      currentIndex = (currentIndex - 1 + filtered.length) % filtered.length;
+      renderPracticeCard();
+    });
+
+    document.getElementById('btn-prac-next').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (filtered.length === 0) return;
+      currentIndex = (currentIndex + 1) % filtered.length;
+      renderPracticeCard();
+    });
+
+    // Speech Recognition (Voice Check)
+    let recognition = null;
+    let isRecording = false;
+    document.getElementById('btn-prac-mic').addEventListener('click', () => {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        showToast('Trình duyệt này không hỗ trợ nhận diện giọng nói. Hãy mở bằng Chrome/Safari.');
+        return;
+      }
+      if (isRecording && recognition) {
+        recognition.stop();
+        return;
+      }
+      recognition = new SpeechRec();
+      recognition.lang = 'zh-CN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 3;
+
+      const micLabel = document.getElementById('mic-label');
+      const transcriptEl = document.getElementById('prac-speech-transcript');
+
+      recognition.onstart = () => {
+        isRecording = true;
+        micLabel.textContent = 'Đang nghe... (Hãy đọc to tiếng Trung)';
+        transcriptEl.textContent = 'Đang lắng nghe giọng của bạn...';
+      };
+
+      recognition.onresult = (event) => {
+        const results = Array.from(event.results[0]).map(r => r.transcript.trim());
+        const spoken = results[0] || '';
+        transcriptEl.textContent = `Máy nghe được: "${spoken}"`;
+
+        const filtered = getFilteredCards();
+        if (!filtered[currentIndex]) return;
+        const card = filtered[currentIndex];
+        const cleanTarget = cleanChinesePunct(card.hanzi);
+        const matched = results.some(r => {
+          const cleanSpoken = cleanChinesePunct(r);
+          if (!cleanSpoken) return false;
+          const ratio = calcCharOverlap(cleanSpoken, cleanTarget);
+          return cleanSpoken === cleanTarget || ratio >= 0.65;
+        });
+
+        if (matched) {
+          showPracticeFeedback(card, true, `🎉 Phát âm chuẩn! Máy nhận diện đúng "${spoken}".`);
+        } else {
+          showPracticeFeedback(card, false, `Máy nghe thành "${spoken}" — hãy nghe lại phát âm chuẩn nhé:`);
+        }
+      };
+
+      recognition.onerror = () => {
+        transcriptEl.textContent = 'Không thu được giọng nói (hãy cấp quyền Micro hoặc mở file ngoài trình duyệt).';
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        micLabel.textContent = 'Nhấn để đọc tiếng Trung';
+      };
+
+      try {
+        recognition.start();
+      } catch (err) {
+        showToast('Không thể khởi động Micro.');
+      }
+    });
+
+    // Handwriting Canvas logic
+    const hwCanvas = document.getElementById('handwriting-canvas');
+    const hwCtx = hwCanvas.getContext('2d');
+    let drawing = false;
+
+    function drawCanvasGrid() {
+      hwCtx.save();
+      hwCtx.strokeStyle = '#e2e8f0';
+      hwCtx.lineWidth = 1;
+      hwCtx.setLineDash([4, 4]);
+      hwCtx.beginPath();
+      hwCtx.moveTo(hwCanvas.width / 2, 0);
+      hwCtx.lineTo(hwCanvas.width / 2, hwCanvas.height);
+      hwCtx.moveTo(0, hwCanvas.height / 2);
+      hwCtx.lineTo(hwCanvas.width, hwCanvas.height / 2);
+      hwCtx.stroke();
+      hwCtx.restore();
+    }
+
+    function clearHandwritingCanvas() {
+      hwCtx.clearRect(0, 0, hwCanvas.width, hwCanvas.height);
+      drawCanvasGrid();
+    }
+
+    function getCanvasPos(e) {
+      const rect = hwCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    hwCanvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      const pos = getCanvasPos(e);
+      hwCtx.strokeStyle = '#0f172a';
+      hwCtx.lineWidth = 3.5;
+      hwCtx.lineCap = 'round';
+      hwCtx.lineJoin = 'round';
+      hwCtx.beginPath();
+      hwCtx.moveTo(pos.x, pos.y);
+    });
+
+    hwCanvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      const pos = getCanvasPos(e);
+      hwCtx.lineTo(pos.x, pos.y);
+      hwCtx.stroke();
+    });
+
+    window.addEventListener('mouseup', () => { drawing = false; });
+
+    hwCanvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      drawing = true;
+      const pos = getCanvasPos(e);
+      hwCtx.strokeStyle = '#0f172a';
+      hwCtx.lineWidth = 3.5;
+      hwCtx.lineCap = 'round';
+      hwCtx.lineJoin = 'round';
+      hwCtx.beginPath();
+      hwCtx.moveTo(pos.x, pos.y);
+    }, { passive: false });
+
+    hwCanvas.addEventListener('touchmove', (e) => {
+      if (!drawing) return;
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      hwCtx.lineTo(pos.x, pos.y);
+      hwCtx.stroke();
+    }, { passive: false });
+
+    hwCanvas.addEventListener('touchend', () => { drawing = false; }, { passive: true });
+
+    document.getElementById('btn-clear-canvas').addEventListener('click', clearHandwritingCanvas);
+    document.getElementById('btn-reveal-from-draw').addEventListener('click', () => {
+      const filtered = getFilteredCards();
+      if (!filtered[currentIndex]) return;
+      showPracticeFeedback(filtered[currentIndex], null, 'Hãy so sánh nét chữ bạn viết với đáp án chuẩn:');
+    });
+    clearHandwritingCanvas();
+
+    document.getElementById('search-input').addEventListener('input', renderWordList);
+
+    document.getElementById('word-list-container').addEventListener('click', (e) => {
+      const speakBtn = e.target.closest('[data-speak]');
+      if (speakBtn) {
+        speakZh(speakBtn.getAttribute('data-speak'), 1.0);
+        return;
+      }
+      const toggleBtn = e.target.closest('[data-toggle-id]');
+      if (toggleBtn) {
+        const id = toggleBtn.getAttribute('data-toggle-id');
+        const target = cards.find(c => c.id === id);
+        if (target) {
+          target.status = target.status === 'mastered' ? 'learning' : 'mastered';
+          saveCards();
+          updateStats();
+          renderWordList();
+        }
+        return;
+      }
+      const delBtn = e.target.closest('[data-delete-id]');
+      if (delBtn) {
+        const id = delBtn.getAttribute('data-delete-id');
+        cards = cards.filter(c => c.id !== id);
+        saveCards();
+        updateTopicOptions();
+        updateStats();
+        renderWordList();
+        showToast('Đã xóa thẻ khỏi danh sách');
+      }
+    });
+
+    document.getElementById('btn-export-json').addEventListener('click', () => {
+      const dataStr = JSON.stringify(cards, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'hanzi-flashcards.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Đã tải xuống file JSON');
+    });
+
+    // Import Modal
+    const importModal = document.getElementById('import-modal');
+    document.getElementById('btn-open-import').addEventListener('click', () => {
+      document.getElementById('import-error').classList.add('hidden');
+      importModal.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-import').addEventListener('click', () => importModal.classList.add('hidden'));
+    document.getElementById('btn-cancel-import').addEventListener('click', () => importModal.classList.add('hidden'));
+
+    document.getElementById('btn-copy-prompt').addEventListener('click', async () => {
+      const text = document.getElementById('gemini-prompt-template').textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Đã copy câu lệnh mẫu!');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Đã copy câu lệnh mẫu!');
+      }
+    });
+
+    document.getElementById('btn-submit-import').addEventListener('click', () => {
+      const errEl = document.getElementById('import-error');
+      const raw = document.getElementById('import-textarea').value;
+      try {
+        const count = parseAndImport(raw);
+        document.getElementById('import-textarea').value = '';
+        errEl.classList.add('hidden');
+        importModal.classList.add('hidden');
+        showToast(`Đã thêm ${count} từ mới vào bộ thẻ!`);
+      } catch (err) {
+        errEl.textContent = err.message || 'Lỗi định dạng dữ liệu.';
+        errEl.classList.remove('hidden');
+      }
+    });
+
+    // Mobile touch swipe left/right to switch cards
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const cardEl = document.getElementById('flashcard');
+    cardEl.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+    cardEl.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      const dy = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) {
+          document.getElementById('btn-next').click();
+        } else {
+          document.getElementById('btn-prev').click();
+        }
+      }
+    }, { passive: true });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (currentTab !== 'study' || !importModal.classList.contains('hidden')) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        flipCard();
+      } else if (e.code === 'ArrowRight') {
+        document.getElementById('btn-next').click();
+      } else if (e.code === 'ArrowLeft') {
+        document.getElementById('btn-prev').click();
+      }
+    });
+
+    // Init
+    loadCards();
+    updateTopicOptions();
+    updateStats();
+    renderStudyCard();
+  </script>
+</body>
+</html>
