@@ -410,6 +410,66 @@
 
     const DEFAULT_CARDS = [
       {
+        id: 'today-1',
+        hanzi: '我想出去吃饭，但是外面堵车了。',
+        pinyin: 'Wǒ xiǎng chūqù chīfàn, dànshì wàimiàn dǔchē le.',
+        meaning: 'Tôi muốn ra ngoài ăn cơm, nhưng bên ngoài tắc đường rồi.',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '堵', radical: '土 (Thổ - đất)', strokes: 11, note: 'Đất (土) đắp chắn ngang đường khiến người ta (者) bị kẹt -> TẮC / CHẶN (堵).' },
+          { char: '车', radical: '车 (Xa - xe)', strokes: 4, note: 'Hình chiếc xe nhìn từ trên xuống -> XE CỘ (车).' }
+        ],
+        exampleZh: '那我们点外卖吧。',
+        examplePy: 'Nà wǒmen diǎn wàimài ba.',
+        exampleVi: 'Phản hồi: Vậy chúng ta đặt đồ ăn giao tới đi.'
+      },
+      {
+        id: 'today-2',
+        hanzi: '我想早点回家，但是今天要加班。',
+        pinyin: 'Wǒ xiǎng zǎodiǎn huí jiā, dànshì jīntiān yào jiābān.',
+        meaning: 'Tôi muốn về nhà sớm một chút, nhưng hôm nay phải tăng ca.',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '加', radical: '力 (Lực - sức)', strokes: 5, note: 'Dùng sức (力) và miệng (口) làm thêm -> TĂNG / THÊM (加).' },
+          { char: '班', radical: '王 (Vương)', strokes: 10, note: 'Hai viên ngọc (王) chia hàng bằng dao (刂) -> CA LÀM / LỚP (班).' }
+        ],
+        exampleZh: '辛苦了，别太晚回家。',
+        examplePy: 'Xīnkǔ le, bié tài wǎn huí jiā.',
+        exampleVi: 'Phản hồi: Vất vả rồi, đừng về nhà muộn quá nhé.'
+      },
+      {
+        id: 'today-3',
+        hanzi: '我想去买菜，但是时间来不及了。',
+        pinyin: 'Wǒ xiǎng qù mǎi cài, dànshì shíjiān láibují le.',
+        meaning: 'Tôi muốn đi mua thức ăn, nhưng thời gian không kịp nữa rồi.',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '来', radical: '木 (Mộc)', strokes: 7, note: 'Cây lúa trĩu bông đi tới -> ĐẾN / TỚI (来).' },
+          { char: '及', radical: '又 (Hựu)', strokes: 3, note: 'Bàn tay (又) với theo người phía trước -> KỊP / ĐẠT TỚI (及).' }
+        ],
+        exampleZh: '没关系，明天再买吧。',
+        examplePy: 'Méi guānxi, míngtiān zài mǎi ba.',
+        exampleVi: 'Phản hồi: Không sao đâu, mai mua cũng được.'
+      },
+      {
+        id: 'today-4',
+        hanzi: '我想点菜，顺便要一杯冰水。',
+        pinyin: 'Wǒ xiǎng diǎncài, shùnbiàn yào yī bēi bīngshuǐ.',
+        meaning: 'Tôi muốn gọi món, tiện thể xin một ly nước đá.',
+        topic: 'Giao tiếp đời sống',
+        status: 'learning',
+        breakdown: [
+          { char: '点', radical: '灬 (Hỏa - lửa)', strokes: 9, note: 'Xem bói (占) dưới ánh lửa (灬) chỉ từng mục -> CHỌN / GỌI MÓN (点).' },
+          { char: '顺', radical: '页 (Hiệt - đầu)', strokes: 9, note: 'Dòng sông (川) chảy xuôi theo đầu (页) -> THUẬN / TIỆN THỂ (顺).' }
+        ],
+        exampleZh: '好的，请稍等一下。',
+        examplePy: 'Hǎo de, qǐng shāoděng yīxià.',
+        exampleVi: 'Phản hồi: Vâng, xin đợi một chút ạ.'
+      },
+      {
         id: 'card-0',
         hanzi: '请把这张CAD图纸发给我看一下。',
         pinyin: 'Qǐng bǎ zhè zhāng CAD túzhǐ fā gěi wǒ kàn yīxià.',
@@ -1218,6 +1278,41 @@
     // Speech Recognition (Voice Check)
     let recognition = null;
     let isRecording = false;
+    let recTimeout = null;
+    let lastInterimText = '';
+    let hasFinalResult = false;
+
+    function evaluateSpokenResults(results) {
+      const transcriptEl = document.getElementById('prac-speech-transcript');
+      const spoken = (results[0] || '').trim();
+      if (!spoken) return;
+      transcriptEl.textContent = `Máy nghe được: "${spoken}"`;
+
+      const filtered = getFilteredCards();
+      if (!filtered[currentIndex]) return;
+      const card = filtered[currentIndex];
+      const cleanTarget = cleanChinesePunct(card.hanzi);
+      const matched = results.some(r => {
+        const cleanSpoken = cleanChinesePunct(r);
+        if (!cleanSpoken) return false;
+        const ratio = calcCharOverlap(cleanSpoken, cleanTarget);
+        return cleanSpoken === cleanTarget || ratio >= 0.65;
+      });
+
+      if (matched) {
+        showPracticeFeedback(card, true, `🎉 Phát âm chuẩn! Máy nhận diện đúng "${spoken}".`);
+      } else {
+        showPracticeFeedback(card, false, `Máy nghe thành "${spoken}" — hãy nghe lại phát âm chuẩn nhé:`);
+      }
+    }
+
+    function resetMicUI() {
+      isRecording = false;
+      clearTimeout(recTimeout);
+      document.getElementById('mic-icon').textContent = '🎙️';
+      document.getElementById('mic-label').textContent = 'Nhấn để đọc tiếng Trung';
+    }
+
     document.getElementById('btn-prac-mic').addEventListener('click', () => {
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRec) {
@@ -1225,58 +1320,85 @@
         return;
       }
       if (isRecording && recognition) {
-        recognition.stop();
+        try { recognition.stop(); } catch (e) {}
+        if (!hasFinalResult && lastInterimText) {
+          hasFinalResult = true;
+          evaluateSpokenResults([lastInterimText]);
+        }
+        setTimeout(() => { if (isRecording) resetMicUI(); }, 500);
         return;
       }
       recognition = new SpeechRec();
       recognition.lang = 'zh-CN';
-      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.interimResults = true;
       recognition.maxAlternatives = 3;
+      lastInterimText = '';
+      hasFinalResult = false;
 
+      const micIcon = document.getElementById('mic-icon');
       const micLabel = document.getElementById('mic-label');
       const transcriptEl = document.getElementById('prac-speech-transcript');
 
       recognition.onstart = () => {
         isRecording = true;
-        micLabel.textContent = 'Đang nghe... (Hãy đọc to tiếng Trung)';
+        micIcon.textContent = '⏹️';
+        micLabel.textContent = 'Đang nghe... (Nói xong bấm lại để dừng)';
         transcriptEl.textContent = 'Đang lắng nghe giọng của bạn...';
+        clearTimeout(recTimeout);
+        recTimeout = setTimeout(() => {
+          if (isRecording) {
+            try { recognition.stop(); } catch (e) {}
+            if (!hasFinalResult && lastInterimText) {
+              hasFinalResult = true;
+              evaluateSpokenResults([lastInterimText]);
+            }
+            resetMicUI();
+          }
+        }, 12000);
       };
 
       recognition.onresult = (event) => {
-        const results = Array.from(event.results[0]).map(r => r.transcript.trim());
-        const spoken = results[0] || '';
-        transcriptEl.textContent = `Máy nghe được: "${spoken}"`;
-
-        const filtered = getFilteredCards();
-        if (!filtered[currentIndex]) return;
-        const card = filtered[currentIndex];
-        const cleanTarget = cleanChinesePunct(card.hanzi);
-        const matched = results.some(r => {
-          const cleanSpoken = cleanChinesePunct(r);
-          if (!cleanSpoken) return false;
-          const ratio = calcCharOverlap(cleanSpoken, cleanTarget);
-          return cleanSpoken === cleanTarget || ratio >= 0.65;
-        });
-
-        if (matched) {
-          showPracticeFeedback(card, true, `🎉 Phát âm chuẩn! Máy nhận diện đúng "${spoken}".`);
-        } else {
-          showPracticeFeedback(card, false, `Máy nghe thành "${spoken}" — hãy nghe lại phát âm chuẩn nhé:`);
+        const lastIdx = event.results.length - 1;
+        const res = event.results[lastIdx];
+        const results = Array.from(res).map(r => r.transcript.trim());
+        lastInterimText = results[0] || '';
+        if (!res.isFinal) {
+          transcriptEl.textContent = `Đang nghe: "${lastInterimText}"`;
+          return;
         }
+        hasFinalResult = true;
+        clearTimeout(recTimeout);
+        evaluateSpokenResults(results);
+        try { recognition.stop(); } catch (e) {}
       };
 
-      recognition.onerror = () => {
-        transcriptEl.textContent = 'Không thu được giọng nói (hãy cấp quyền Micro hoặc mở file ngoài trình duyệt).';
+      recognition.onerror = (event) => {
+        const err = event && event.error ? event.error : 'unknown';
+        if (err === 'no-speech') {
+          transcriptEl.textContent = 'Không nghe thấy tiếng nào. Hãy đưa mic gần hơn và nói to rõ.';
+        } else if (err === 'network') {
+          transcriptEl.textContent = 'Lỗi mạng khi nhận diện giọng nói (Google Speech cần kết nối mạng ổn định).';
+        } else if (err === 'not-allowed' || err === 'service-not-allowed') {
+          transcriptEl.textContent = 'Chưa được cấp quyền Micro. Hãy bấm biểu tượng ổ khóa trên thanh địa chỉ Chrome để bật Micro.';
+        } else {
+          transcriptEl.textContent = `Không thu được giọng nói (mã lỗi: ${err}).`;
+        }
+        resetMicUI();
       };
 
       recognition.onend = () => {
-        isRecording = false;
-        micLabel.textContent = 'Nhấn để đọc tiếng Trung';
+        if (!hasFinalResult && lastInterimText) {
+          hasFinalResult = true;
+          evaluateSpokenResults([lastInterimText]);
+        }
+        resetMicUI();
       };
 
       try {
         recognition.start();
       } catch (err) {
+        resetMicUI();
         showToast('Không thể khởi động Micro.');
       }
     });
