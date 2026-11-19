@@ -280,14 +280,42 @@
           <p class="text-[11px] text-slate-400 text-center">Mẹo: Bạn có thể gõ trực tiếp chữ Hán hoặc gõ Pinyin không dấu đều được chấm.</p>
         </div>
 
-        <!-- Sub-panel 2: Speak via Microphone -->
-        <div id="panel-mode-speak" class="hidden space-y-3 text-center max-w-md mx-auto">
-          <button type="button" id="btn-prac-mic" class="mx-auto px-5 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
-            <span id="mic-icon">🎙️</span>
-            <span id="mic-label">Nhấn để đọc tiếng Trung</span>
-          </button>
-          <div id="prac-speech-transcript" class="text-xs text-slate-600 min-h-[20px]"></div>
-          <p class="text-[11px] text-slate-400">Yêu cầu trình duyệt Chrome/Edge/Safari cấp quyền Micro. Nếu trình duyệt chặn mic trong khung xem trước, hãy tải file HTML mở ngoài trình duyệt.</p>
+        <!-- Sub-panel 2: Speak via Microphone (Compatible with Chinese Domestic Phones) -->
+        <div id="panel-mode-speak" class="hidden space-y-3.5 text-center max-w-md mx-auto">
+          <!-- Method A: Native Keyboard Voice Input + Auto-Grade (100% compatible on Chinese ROMs) -->
+          <div class="bg-rose-50/70 border border-rose-200 rounded-2xl p-3.5 space-y-2.5 text-left">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-rose-800">🎙️ Cách 1: Đọc qua Mic bàn phím (Chuẩn 100% cho ĐT Trung Quốc)</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-600 text-white shrink-0">Khuyên dùng</span>
+            </div>
+            <div class="flex gap-2">
+              <input id="prac-voice-input" type="text" placeholder="Chạm vào đây -> bấm 🎙️ trên bàn phím và đọc..." class="flex-1 text-sm px-3 py-2.5 rounded-xl border border-rose-300 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 hanzi-font" />
+              <button type="button" id="btn-voice-clear" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-semibold shrink-0" title="Xóa để đọc lại">
+                Xóa
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-600 leading-snug">
+              Khi bạn đọc bằng <strong>Mic bàn phím (Sogou / Baidu / Xiaomi / Huawei...)</strong>, máy sẽ <strong>tự động chấm điểm ngay</strong> khi chữ hiện lên mà không cần Google Speech!
+            </p>
+          </div>
+
+          <!-- Method B: Direct Hardware Audio Recorder (Compare your voice with native TTS) -->
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+            <div class="text-xs font-bold text-slate-800 text-left">🎧 Cách 2: Thu âm giọng thật &amp; So sánh phát âm chuẩn</div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+              <button type="button" id="btn-hw-rec" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+                <span id="hw-rec-icon">🔴</span>
+                <span id="hw-rec-label">Bấm thu âm giọng đọc</span>
+              </button>
+              <button type="button" id="btn-hw-play-mine" class="hidden px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold transition">
+                ▶️ Nghe giọng tôi
+              </button>
+              <button type="button" id="btn-hw-compare" class="hidden px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
+                🔄 Nghe giọng tôi → Giọng chuẩn
+              </button>
+            </div>
+            <div id="hw-rec-status" class="text-xs text-slate-500 min-h-[18px]">Thu âm trực tiếp từ Micro phần cứng của điện thoại.</div>
+          </div>
         </div>
 
         <!-- Sub-panel 3: Handwriting Canvas -->
@@ -406,9 +434,236 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'quang_zh_flashcards_v4';
+    const STORAGE_KEY = 'quang_zh_flashcards_v6';
 
     const DEFAULT_CARDS = [
+      {
+        id: 'l3-1',
+        hanzi: '大家今天晚上几点到？',
+        pinyin: 'Dàjiā jīntiān wǎnshang jǐ diǎn dào?',
+        meaning: 'Tối nay mấy giờ mọi người tới?',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '晚', radical: '日 (Nhật - mặt trời)', strokes: 11, note: 'Mặt trời (日) lặn khuất khỏi tầm mắt, miễn (免) chiếu sáng -> BUỔI TỐI / MUỘN (晚).' },
+          { char: '到', radical: '刂 (Đao - dao)', strokes: 8, note: 'Đi tới đích (至) dứt khoát như nhát dao (刂) -> ĐẾN / TỚI (到).' }
+        ],
+        exampleZh: '说好七点半以前到。',
+        examplePy: 'Shuō hǎo qī diǎn bàn yǐqián dào.',
+        exampleVi: 'Câu tiếp theo: Đã hẹn là trước 7 rưỡi sẽ tới.'
+      },
+      {
+        id: 'l3-2',
+        hanzi: '说好七点半以前到。',
+        pinyin: 'Shuō hǎo qī diǎn bàn yǐqián dào.',
+        meaning: 'Đã hẹn là trước 7 rưỡi sẽ tới.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '半', radical: '十 (Thập - mười)', strokes: 5, note: 'Cắt đôi (八) chữ thập (十) ra thành hai phần -> MỘT NỬA / RƯỠI (半).' },
+          { char: '前', radical: '刂 (Đao - dao)', strokes: 9, note: 'Cắt (刂) con thuyền (月) tiến lên phía mũi -> TRƯỚC / PHÍA TRƯỚC (前).' }
+        ],
+        exampleZh: '大家应该快到了。',
+        examplePy: 'Dàjiā yīnggāi kuài dào le.',
+        exampleVi: 'Mở rộng: Mọi người chắc sắp tới rồi.'
+      },
+      {
+        id: 'l3-3',
+        hanzi: '订的蛋糕到了吗？',
+        pinyin: 'Dìng de dàngāo dào le ma?',
+        meaning: 'Bánh kem đặt đã giao đến chưa anh?',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '订', radical: '讠 (Ngôn - lời nói)', strokes: 4, note: 'Dùng lời nói (讠) chốt đinh (丁) chắc chắn -> ĐẶT TRƯỚC (订).' },
+          { char: '糕', radical: '米 (Mễ - gạo)', strokes: 16, note: 'Bột gạo (米) nướng lên thơm như thịt cừu (羔) -> BÁNH NGỌT / BÁNH KEM (糕).' }
+        ],
+        exampleZh: '蛋糕已经到了。',
+        examplePy: 'Dàngāo yǐjīng dào le.',
+        exampleVi: 'Câu tiếp theo: Bánh kem đã đến rồi.'
+      },
+      {
+        id: 'l3-4',
+        hanzi: '蛋糕已经到了，先放在冰箱里了。',
+        pinyin: 'Dàngāo yǐjīng dào le, xiān fàng zài bīngxiāng lǐ le.',
+        meaning: 'Bánh ngọt đến rồi, anh để trong tủ lạnh rồi.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '冰', radical: '冫 (Băng - nước đá)', strokes: 6, note: 'Nước (水) đóng thêm hai giọt băng (冫) -> ĐÁ LẠNH (冰).' },
+          { char: '箱', radical: '⺮ (Trúc - tre)', strokes: 15, note: 'Đóng bằng tre (⺮) nhìn vào bên trong (相) -> CÁI TỦ / THÙNG (箱).' }
+        ],
+        exampleZh: '太好了，放冰箱里不会化。',
+        examplePy: 'Tài hǎo le, fàng bīngxiāng lǐ bù huì huà.',
+        exampleVi: 'Mở rộng: Tốt quá, để trong tủ lạnh sẽ không bị chảy.'
+      },
+      {
+        id: 'l3-5',
+        hanzi: '我们叫饭店送的饭菜几点能到？',
+        pinyin: 'Wǒmen jiào fàndiàn sòng de fàncài jǐ diǎn néng dào?',
+        meaning: 'Đồ ăn mà mình đặt nhà hàng mấy giờ thì tới được?',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '饭', radical: '饣 (Thực - ăn)', strokes: 7, note: 'Đồ ăn (饣) nấu đi nấu lại (反) -> CƠM / ĐỒ ĂN (饭).' },
+          { char: '送', radical: '辶 (Sước - bước đi)', strokes: 9, note: 'Đi bộ (辶) mang đồ (关) tới tận cửa -> GIAO / TIỄN (送).' }
+        ],
+        exampleZh: '他们说七点一刻能送到。',
+        examplePy: 'Tāmen shuō qī diǎn yī kè néng sòng dào.',
+        exampleVi: 'Câu tiếp theo: Họ nói 7 giờ 15 giao đến.'
+      },
+      {
+        id: 'l3-6',
+        hanzi: '他们说七点一刻能送到。',
+        pinyin: 'Tāmen shuō qī diǎn yī kè néng sòng dào.',
+        meaning: 'Họ nói 7 giờ 15 giao đến.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '刻', radical: '刂 (Đao - dao)', strokes: 8, note: 'Dùng dao (刂) khắc vạch chia trên đồng hồ -> KHẮC (15 PHÚT) (刻).' },
+          { char: '能', radical: '月 (Nhục - thịt)', strokes: 10, note: 'Con gấu khỏe mạnh có thể làm được mọi việc -> CÓ THỂ (能).' }
+        ],
+        exampleZh: '还有十分钟就七点一刻了。',
+        examplePy: 'Hái yǒu shí fēnzhōng jiù qī diǎn yī kè le.',
+        exampleVi: 'Mở rộng: Còn 10 phút nữa là đến 7 giờ 15 rồi.'
+      },
+      {
+        id: 'l3-7',
+        hanzi: '你再打个电话问问吧，别送晚了！',
+        pinyin: 'Nǐ zài dǎ ge diànhuà wènwen ba, bié sòng wǎn le!',
+        meaning: 'Anh gọi điện thoại hỏi lại xem, đừng để họ giao trễ!',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '问', radical: '门 (Môn - cửa)', strokes: 6, note: 'Ghé miệng (口) vào khe cửa (门) để HỎI THĂM (问).' },
+          { char: '别', radical: '刂 (Đao - dao)', strokes: 7, note: 'Dùng dao (刂) gạt sức (另) ngăn lại -> ĐỪNG / KHÁC (别).' }
+        ],
+        exampleZh: '好，我马上就打。',
+        examplePy: 'Hǎo, wǒ mǎshàng jiù dǎ.',
+        exampleVi: 'Câu tiếp theo: Được, anh gọi ngay đây.'
+      },
+      {
+        id: 'l3-8',
+        hanzi: '好，我马上就打。',
+        pinyin: 'Hǎo, wǒ mǎshàng jiù dǎ.',
+        meaning: 'Được, anh gọi ngay đây.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '马', radical: '马 (Mã - ngựa)', strokes: 3, note: 'Hình con ngựa đang phi -> NGỰA / NGAY LẬP TỨC (马上).' },
+          { char: '打', radical: '扌 (Thủ - tay)', strokes: 5, note: 'Dùng tay (扌) bấm số gọi (丁) -> GỌI ĐIỆN / ĐÁNH (打).' }
+        ],
+        exampleZh: '喂，请问我们的菜送出来了吗？',
+        examplePy: 'Wèi, qǐngwèn wǒmen de cài sòng chūlái le ma?',
+        exampleVi: 'Mở rộng: Alo, xin hỏi đồ ăn của chúng tôi đã giao đi chưa?'
+      },
+      {
+        id: 'l3-9',
+        hanzi: '喝的都准备好了吗？',
+        pinyin: 'Hē de dōu zhǔnbèi hǎo le ma?',
+        meaning: 'Đồ uống anh đã chuẩn bị xong hết rồi chứ?',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '准', radical: '冫 (Băng)', strokes: 10, note: 'Lạnh (冫) vẫn ngắm chuẩn con chim (隹) -> CHUẨN BỊ / CHUẨN (准).' },
+          { char: '备', radical: '夂 (Truy)', strokes: 8, note: 'Đi tới ruộng (田) cất sẵn đồ dự phòng -> CHUẨN BỊ (备).' }
+        ],
+        exampleZh: '我等一会儿就去超市买。',
+        examplePy: 'Wǒ děng yīhuìr jiù qù chāoshì mǎi.',
+        exampleVi: 'Câu tiếp theo: Lát nữa anh sẽ đi siêu thị mua.'
+      },
+      {
+        id: 'l3-10',
+        hanzi: '我等一会儿就去超市买啤酒和其他的饮料。',
+        pinyin: 'Wǒ děng yīhuìr jiù qù chāoshì mǎi píjiǔ hé qítā de yǐnliào.',
+        meaning: 'Lát nữa anh sẽ đi siêu thị mua bia và các đồ uống khác.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '啤', radical: '口 (Khẩu - miệng)', strokes: 11, note: 'Đưa lên miệng (口) uống thứ đồ thấp hèn (卑) nhưng sảng khoái -> BIA (啤).' },
+          { char: '酒', radical: '氵 (Thủy - nước)', strokes: 10, note: 'Nước (氵) ủ lâu trong bình (酉) -> RƯỢU / BIA (酒).' }
+        ],
+        exampleZh: '我和你一起去吧。',
+        examplePy: 'Wǒ hé nǐ yīqǐ qù ba.',
+        exampleVi: 'Câu tiếp theo: Em đi cùng anh nhé.'
+      },
+      {
+        id: 'l3-11',
+        hanzi: '我和你一起去吧。',
+        pinyin: 'Wǒ hé nǐ yīqǐ qù ba.',
+        meaning: 'Em đi cùng anh nhé.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '和', radical: '口 (Khẩu - miệng)', strokes: 8, note: 'Có lúa (禾) ăn và miệng (口) nói chuyện hòa thuận -> VÀ / CÙNG VỚI (和).' },
+          { char: '起', radical: '走 (Tẩu - chạy)', strokes: 10, note: 'Tự mình (己) đứng dậy bước đi (走) -> CÙNG NHAU (一起).' }
+        ],
+        exampleZh: '好啊，我们现在就出发。',
+        examplePy: 'Hǎo a, wǒmen xiànzài jiù chūfā.',
+        exampleVi: 'Mở rộng: Được đấy, mình xuất phát ngay bây giờ đi.'
+      },
+      {
+        id: 'l3-12',
+        hanzi: '今天晚上人多，家里还差几双筷子和几个盘子，我去买一些。',
+        pinyin: 'Jīntiān wǎnshang rén duō, jiā lǐ hái chà jǐ shuāng kuàizi hé jǐ ge pánzi, wǒ qù mǎi yīxiē.',
+        meaning: 'Tối nay đông người, trong nhà còn thiếu mấy đôi đũa và vài cái đĩa, em đi mua thêm một ít.',
+        topic: 'L3 Mời khách tới nhà',
+        status: 'learning',
+        breakdown: [
+          { char: '筷', radical: '⺮ (Trúc - tre)', strokes: 13, note: 'Làm bằng tre (⺮) giúp gắp nhanh (快) -> ĐÔI ĐŨA (筷).' },
+          { char: '盘', radical: '皿 (Mẫn - bát đĩa)', strokes: 11, note: 'Chiếc bát/đĩa (皿) tròn xoe như con thuyền (舟) -> CÁI ĐĨA (盘).' }
+        ],
+        exampleZh: '再买一包纸巾吧。',
+        examplePy: 'Zài mǎi yī bāo zhǐjīn ba.',
+        exampleVi: 'Mở rộng: Mua thêm một gói khăn giấy nữa nhé.'
+      },
+      {"id": "l3h-1", "hanzi": "赵阳一米七五，七十公斤。", "pinyin": "Zhào Yáng yī mǐ qī wǔ, qīshí gōngjīn.", "meaning": "Triệu Dương cao 1m75, nặng 70 kg.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "米", "radical": "米 (Mễ - gạo)", "strokes": 6, "note": "Hạt gạo tỏa bốn phía -> GẠO / MÉT (米)."}, {"char": "斤", "radical": "斤 (Cân - cái rìu)", "strokes": 4, "note": "Cái rìu dùng cân đo trọng lượng -> CÂN / KILOGRAM (公斤)."}], "exampleZh": "李想一米八零，七十五公斤。", "examplePy": "Lǐ Xiǎng yī mǐ bā líng, qīshíwǔ gōngjīn.", "exampleVi": "Câu tiếp theo: Lý Tưởng cao 1m80, nặng 75 kg."},
+      {"id": "l3h-2", "hanzi": "李想一米八零，七十五公斤。", "pinyin": "Lǐ Xiǎng yī mǐ bā líng, qīshíwǔ gōngjīn.", "meaning": "Lý Tưởng cao 1m80, nặng 75 kg.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "公", "radical": "八 (Bát - tám)", "strokes": 4, "note": "Chia đều công bằng -> CÔNG BẰNG / KILOGRAM (公斤)."}, {"char": "零", "radical": "雨 (Vũ - mưa)", "strokes": 13, "note": "Giọt mưa rơi lất phất -> SỐ KHÔNG / LẺ (零)."}], "exampleZh": "李想比赵阳高，赵阳比李想矮。", "examplePy": "Lǐ Xiǎng bǐ Zhào Yáng gāo, Zhào Yáng bǐ Lǐ Xiǎng ǎi.", "exampleVi": "Câu tiếp theo: Lý Tưởng cao hơn Triệu Dương, Triệu Dương thấp hơn Lý Tưởng."},
+      {"id": "l3h-3", "hanzi": "李想比赵阳高，赵阳比李想矮。", "pinyin": "Lǐ Xiǎng bǐ Zhào Yáng gāo, Zhào Yáng bǐ Lǐ Xiǎng ǎi.", "meaning": "Lý Tưởng cao hơn Triệu Dương, Triệu Dương thấp hơn Lý Tưởng.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "比", "radical": "比 (Tỷ - so sánh)", "strokes": 4, "note": "Hai người đứng cạnh nhau -> SO SÁNH / HƠN (比)."}, {"char": "矮", "radical": "矢 (Thỉ - mũi tên)", "strokes": 13, "note": "Mũi tên (矢) giao cho cô gái (委) giữ -> THẤP / LÙN (矮)."}], "exampleZh": "小明一米六，丽丽一米六五，爸爸一米七六。", "examplePy": "Xiǎomíng yī mǐ liù, Lìli yī mǐ liù wǔ, bàba yī mǐ qī liù.", "exampleVi": "Câu tiếp theo: Tiểu Minh cao 1m60, Lệ Lệ cao 1m65, bố cao 1m76."},
+      {"id": "l3h-4", "hanzi": "小明一米六，丽丽一米六五，爸爸一米七六。", "pinyin": "Xiǎomíng yī mǐ liù, Lìli yī mǐ liù wǔ, bàba yī mǐ qī liù.", "meaning": "Tiểu Minh cao 1m60, Lệ Lệ cao 1m65, bố cao 1m76.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "明", "radical": "日 (Nhật - mặt trời)", "strokes": 8, "note": "Mặt trời (日) và mặt trăng (月) cùng chiếu -> SÁNG / MINH (明)."}, {"char": "爸", "radical": "父 (Phụ - cha)", "strokes": 8, "note": "Người cha (父) cầm gậy chỉ đường -> BỐ (爸)."}], "exampleZh": "小明站在前面。", "examplePy": "Xiǎomíng zhàn zài qiánmiàn.", "exampleVi": "Câu tiếp theo: Tiểu Minh đứng ở phía trước."},
+      {"id": "l3h-5", "hanzi": "小明站在前面。", "pinyin": "Xiǎomíng zhàn zài qiánmiàn.", "meaning": "Tiểu Minh đứng ở phía trước.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "站", "radical": "立 (Lập - đứng)", "strokes": 10, "note": "Đứng thẳng (立) chiếm một chỗ (占) -> ĐỨNG (站)."}, {"char": "面", "radical": "面 (Diện - mặt)", "strokes": 9, "note": "Khuôn mặt nhìn thẳng -> MẶT / PHÍA (前面)."}], "exampleZh": "丽丽站在中间。", "examplePy": "Lìli zhàn zài zhōngjiān.", "exampleVi": "Câu tiếp theo: Lệ Lệ đứng ở giữa."},
+      {"id": "l3h-6", "hanzi": "丽丽站在中间。", "pinyin": "Lìli zhàn zài zhōngjiān.", "meaning": "Lệ Lệ đứng ở giữa.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "中", "radical": "丨 (Cổn)", "strokes": 4, "note": "Nét sổ chia đôi hình chữ nhật -> Ở GIỮA (中)."}, {"char": "间", "radical": "门 (Môn - cửa)", "strokes": 7, "note": "Mặt trời (日) lọt qua khe cửa (门) -> KHOẢNG GIỮA (中间)."}], "exampleZh": "爸爸站在后面。", "examplePy": "Bàba zhàn zài hòumiàn.", "exampleVi": "Câu tiếp theo: Bố đứng ở phía sau."},
+      {"id": "l3h-7", "hanzi": "爸爸站在后面。", "pinyin": "Bàba zhàn zài hòumiàn.", "meaning": "Bố đứng ở phía sau.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "后", "radical": "口 (Khẩu - miệng)", "strokes": 6, "note": "Người đứng sau vách đá lên tiếng (口) -> PHÍA SAU (后面)."}], "exampleZh": "左边的狗二十五公斤。", "examplePy": "Zuǒbiān de gǒu èrshíwǔ gōngjīn.", "exampleVi": "Câu tiếp theo: Con chó bên trái nặng hai mươi lăm kilogram."},
+      {"id": "l3h-8", "hanzi": "左边的狗二十五公斤。", "pinyin": "Zuǒbiān de gǒu èrshíwǔ gōngjīn.", "meaning": "Con chó bên trái nặng hai mươi lăm kilogram.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "左", "radical": "工 (Công)", "strokes": 5, "note": "Tay trái (ナ) làm công việc (工) -> BÊN TRÁI (左)."}, {"char": "狗", "radical": "犭 (Khuyển - chó)", "strokes": 8, "note": "Loài thú (犭) sủa từng câu (句) -> CON CHÓ (狗)."}], "exampleZh": "中间的狗二十公斤。", "examplePy": "Zhōngjiān de gǒu èrshí gōngjīn.", "exampleVi": "Câu tiếp theo: Con chó ở giữa nặng hai mươi kilogram."},
+      {"id": "l3h-9", "hanzi": "中间的狗二十公斤。", "pinyin": "Zhōngjiān de gǒu èrshí gōngjīn.", "meaning": "Con chó ở giữa nặng hai mươi kilogram.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "十", "radical": "十 (Thập)", "strokes": 2, "note": "Hai nét ngang dọc giao nhau -> MƯỜI (十)."}], "exampleZh": "右边的狗三十五公斤。", "examplePy": "Yòubiān de gǒu sānshíwǔ gōngjīn.", "exampleVi": "Câu tiếp theo: Con chó bên phải nặng ba mươi lăm kilogram."},
+      {"id": "l3h-10", "hanzi": "右边的狗三十五公斤。", "pinyin": "Yòubiān de gǒu sānshíwǔ gōngjīn.", "meaning": "Con chó bên phải nặng ba mươi lăm kilogram.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "右", "radical": "口 (Khẩu - miệng)", "strokes": 5, "note": "Tay phải (ナ) đưa cơm lên miệng (口) -> BÊN PHẢI (右)."}], "exampleZh": "右边的狗最胖，中间的狗最瘦。", "examplePy": "Yòubiān de gǒu zuì pàng, zhōngjiān de gǒu zuì shòu.", "exampleVi": "Câu tiếp theo: Con chó bên phải mập nhất, con chó ở giữa gầy nhất."},
+      {"id": "l3h-11", "hanzi": "右边的狗最胖，中间的狗最瘦。", "pinyin": "Yòubiān de gǒu zuì pàng, zhōngjiān de gǒu zuì shòu.", "meaning": "Con chó bên phải mập nhất, con chó ở giữa gầy nhất.", "topic": "L3 Chiều cao và cân nặng", "status": "learning", "breakdown": [{"char": "胖", "radical": "月 (Nhục - thịt)", "strokes": 9, "note": "Thịt (月) tăng thêm một nửa (半) -> MẬP / BÉO (胖)."}, {"char": "瘦", "radical": "疒 (Nạch - bệnh)", "strokes": 14, "note": "Ốm (疒) lâu ngày tay cầm gậy (叟) -> GẦY (瘦)."}], "exampleZh": "我每天带它们去散步。", "examplePy": "Wǒ měitiān dài tāmen qù sànbù.", "exampleVi": "Mở rộng: Tôi mỗi ngày dắt chúng đi dạo."},
+      {"id": "l3p-1", "hanzi": "您好！请问，您需要帮助吗？", "pinyin": "Nín hǎo! Qǐngwèn, nín xūyào bāngzhù ma?", "meaning": "Chào chị! Xin hỏi chị cần giúp gì không ạ?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "需", "radical": "雨 (Vũ - mưa)", "strokes": 14, "note": "Trời mưa (雨) thì rất CẦN (需) ô che."}, {"char": "帮", "radical": "巾 (Cân - khăn)", "strokes": 9, "note": "Đưa khăn (巾) giúp đỡ người khác -> GIÚP ĐỠ (帮)."}], "exampleZh": "你好，我想给我儿子买一条裤子。", "examplePy": "Nǐ hǎo, wǒ xiǎng gěi wǒ érzi mǎi yī tiáo kùzi.", "exampleVi": "Câu tiếp theo: Chào em, chị muốn mua một chiếc quần cho con trai chị."},
+      {"id": "l3p-2", "hanzi": "你好，我想给我儿子买一条裤子。", "pinyin": "Nǐ hǎo, wǒ xiǎng gěi wǒ érzi mǎi yī tiáo kùzi.", "meaning": "Chào em, chị muốn mua một chiếc quần cho con trai chị.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "条", "radical": "木 (Mộc - cây)", "strokes": 7, "note": "Lượng từ cho vật dài như chiếc quần -> CHIẾC / CÁI (条)."}, {"char": "裤", "radical": "衤 (Y - áo quần)", "strokes": 12, "note": "Quần áo (衤) cất trong kho (库) -> CÁI QUẦN (裤)."}], "exampleZh": "您儿子多大了？", "examplePy": "Nín érzi duō dà le?", "exampleVi": "Câu tiếp theo: Con trai chị bao nhiêu tuổi rồi?"},
+      {"id": "l3p-3", "hanzi": "您儿子多大了？", "pinyin": "Nín érzi duō dà le?", "meaning": "Con trai chị bao nhiêu tuổi rồi?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "儿", "radical": "儿 (Nhi - trẻ nhỏ)", "strokes": 2, "note": "Hai chân đứa trẻ chạy lon ton -> CON TRAI (儿子)."}], "exampleZh": "他十二岁了。", "examplePy": "Tā shí'èr suì le.", "exampleVi": "Câu tiếp theo: Cháu 12 tuổi rồi."},
+      {"id": "l3p-4", "hanzi": "他十二岁了。", "pinyin": "Tā shí'èr suì le.", "meaning": "Cháu 12 tuổi rồi.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "岁", "radical": "山 (Sơn - núi)", "strokes": 6, "note": "Núi (山) qua từng buổi chiều (夕) -> TUỔI (岁)."}], "exampleZh": "他的裤子在这边。", "examplePy": "Tā de kùzi zài zhè biān.", "exampleVi": "Câu tiếp theo: Quần phù hợp với cháu ở bên này."},
+      {"id": "l3p-5", "hanzi": "他的裤子在这边。", "pinyin": "Tā de kùzi zài zhè biān.", "meaning": "Quần phù hợp với cháu ở bên này.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "边", "radical": "辶 (Sước - bước đi)", "strokes": 5, "note": "Bước đi (辶) về một phía -> BÊN / PHÍA (这边)."}], "exampleZh": "他多高？", "examplePy": "Tā duō gāo?", "exampleVi": "Câu tiếp theo: Cháu cao mét bao nhiêu ạ?"},
+      {"id": "l3p-6", "hanzi": "他多高？", "pinyin": "Tā duō gāo?", "meaning": "Cháu cao mét bao nhiêu ạ?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "高", "radical": "高 (Cao)", "strokes": 10, "note": "Hình tòa tháp cao tầng -> CAO (高)."}], "exampleZh": "一米六。", "examplePy": "Yī mǐ liù.", "exampleVi": "Câu tiếp theo: 1 mét 60."},
+      {"id": "l3p-7", "hanzi": "一米六。", "pinyin": "Yī mǐ liù.", "meaning": "1 mét 60.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "六", "radical": "八 (Bát)", "strokes": 4, "note": "Nóc nhà chia hai chân -> SỐ SÁU (六)."}], "exampleZh": "他多少公斤？", "examplePy": "Tā duōshao gōngjīn?", "exampleVi": "Câu tiếp theo: Nặng bao nhiêu cân hả chị?"},
+      {"id": "l3p-8", "hanzi": "他多少公斤？", "pinyin": "Tā duōshao gōngjīn?", "meaning": "Nặng bao nhiêu cân hả chị?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "少", "radical": "小 (Tiểu - nhỏ)", "strokes": 4, "note": "Nhỏ (小) lại bị xén một nét -> ÍT / BAO NHIÊU (多少)."}], "exampleZh": "五十公斤。", "examplePy": "Wǔshí gōngjīn.", "exampleVi": "Câu tiếp theo: 50 kg."},
+      {"id": "l3p-9", "hanzi": "五十公斤。", "pinyin": "Wǔshí gōngjīn.", "meaning": "50 kg.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "五", "radical": "二 (Nhị)", "strokes": 4, "note": "Số NĂM (五)."}], "exampleZh": "您看这条怎么样？", "examplePy": "Nín kàn zhè tiáo zěnmeyàng?", "exampleVi": "Câu tiếp theo: Chị thấy chiếc này thế nào?"},
+      {"id": "l3p-10", "hanzi": "您看这条怎么样？", "pinyin": "Nín kàn zhè tiáo zěnmeyàng?", "meaning": "Chị thấy chiếc này thế nào?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "看", "radical": "目 (Mục - mắt)", "strokes": 9, "note": "Đưa tay (手) che lên mắt (目) để NHÌN (看)."}], "exampleZh": "这条绿色的卖得很好。", "examplePy": "Zhè tiáo lǜsè de mài de hěn hǎo.", "exampleVi": "Câu tiếp theo: Chiếc màu xanh lá này bên em bán rất chạy đó."},
+      {"id": "l3p-11", "hanzi": "这条绿色的卖得很好。", "pinyin": "Zhè tiáo lǜsè de mài de hěn hǎo.", "meaning": "Chiếc màu xanh lá này bên em bán rất chạy đó.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "绿", "radical": "纟 (Mịch - tơ)", "strokes": 11, "note": "Sợi tơ (纟) nhuộm màu lục (录) -> XANH LÁ (绿)."}, {"char": "卖", "radical": "十 (Thập)", "strokes": 8, "note": "Đem hàng đi mua (买) thêm chữ thập (十) ở trên -> BÁN (卖)."}], "exampleZh": "我儿子不喜欢绿色的。", "examplePy": "Wǒ érzi bù xǐhuan lǜsè de.", "exampleVi": "Câu tiếp theo: Con trai chị không thích màu xanh lá cây."},
+      {"id": "l3p-12", "hanzi": "我儿子不喜欢绿色的。", "pinyin": "Wǒ érzi bù xǐhuan lǜsè de.", "meaning": "Con trai chị không thích màu xanh lá cây.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "喜", "radical": "口 (Khẩu - miệng)", "strokes": 12, "note": "Đánh trống (壴) cười mở miệng (口) -> THÍCH / VUI (喜欢)."}], "exampleZh": "有其他颜色吗？", "examplePy": "Yǒu qítā yánsè ma?", "exampleVi": "Câu tiếp theo: Còn màu nào khác không?"},
+      {"id": "l3p-13", "hanzi": "有其他颜色吗？", "pinyin": "Yǒu qítā yánsè ma?", "meaning": "Còn màu nào khác không?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "颜", "radical": "页 (Hiệt - đầu)", "strokes": 15, "note": "Gương mặt (彦+页) có sắc thái -> MÀU SẮC (颜色)."}, {"char": "色", "radical": "色 (Sắc)", "strokes": 6, "note": "Sắc màu -> MÀU (色)."}], "exampleZh": "还有黑色的和蓝色的。在这儿。", "examplePy": "Hái yǒu hēisè de hé lánsè de. Zài zhèr.", "exampleVi": "Câu tiếp theo: Còn màu đen và màu xanh lam. Bên này chị ạ."},
+      {"id": "l3p-14", "hanzi": "还有黑色的和蓝色的。在这儿。", "pinyin": "Hái yǒu hēisè de hé lánsè de. Zài zhèr.", "meaning": "Còn màu đen và màu xanh lam. Bên này chị ạ.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "黑", "radical": "黑 (Hắc - đen)", "strokes": 12, "note": "Khói lửa (灬) bám đen ống khói -> MÀU ĐEN (黑)."}, {"char": "蓝", "radical": "艹 (Thảo - cỏ)", "strokes": 13, "note": "Cây cỏ (艹) dùng làm thuốc nhuộm chàm (监) -> XANH LAM (蓝)."}], "exampleZh": "我看看。", "examplePy": "Wǒ kànkan.", "exampleVi": "Câu tiếp theo: Để chị xem."},
+      {"id": "l3p-15", "hanzi": "我看看。", "pinyin": "Wǒ kànkan.", "meaning": "Để chị xem.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "看", "radical": "目 (Mục - mắt)", "strokes": 9, "note": "Lặp lại động từ 看 để nói 'xem thử một chút'."}], "exampleZh": "我觉得蓝色的更好看。", "examplePy": "Wǒ juéde lánsè de gèng hǎokàn.", "exampleVi": "Câu tiếp theo: Chị thấy chiếc màu xanh lam đẹp hơn."},
+      {"id": "l3p-16", "hanzi": "我觉得蓝色的更好看。", "pinyin": "Wǒ juéde lánsè de gèng hǎokàn.", "meaning": "Chị thấy chiếc màu xanh lam đẹp hơn.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "更", "radical": "曰 (Viết)", "strokes": 7, "note": "Thay đổi thêm một bậc -> HƠN / CÀNG (更)."}], "exampleZh": "就这条吧！", "examplePy": "Jiù zhè tiáo ba!", "exampleVi": "Câu tiếp theo: Lấy chiếc này đi."},
+      {"id": "l3p-17", "hanzi": "就这条吧！", "pinyin": "Jiù zhè tiáo ba!", "meaning": "Lấy chiếc này đi.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "就", "radical": "尤 (Uông)", "strokes": 12, "note": "Chốt ngay lập tức -> CHÍNH LÀ / LẤY CÁI NÀY (就这条吧)."}], "exampleZh": "您还要看看其他的衣服吗？", "examplePy": "Nín hái yào kànkan qítā de yīfu ma?", "exampleVi": "Câu tiếp theo: Chị còn muốn xem quần áo khác không ạ?"},
+      {"id": "l3p-18", "hanzi": "您还要看看其他的衣服吗？", "pinyin": "Nín hái yào kànkan qítā de yīfu ma?", "meaning": "Chị còn muốn xem quần áo khác không ạ?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "服", "radical": "月 (Nhục)", "strokes": 8, "note": "Mặc vào vừa vặn -> TRANG PHỤC / QUẦN ÁO (衣服)."}], "exampleZh": "需要衬衫吗？", "examplePy": "Xūyào chènshān ma?", "exampleVi": "Câu tiếp theo: Chị cần mua áo sơ-mi không?"},
+      {"id": "l3p-19", "hanzi": "需要衬衫吗？", "pinyin": "Xūyào chènshān ma?", "meaning": "Chị cần mua áo sơ-mi không?", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "衬", "radical": "衤 (Y - áo)", "strokes": 8, "note": "Áo (衤) mặc lót vừa vặn từng tấc (寸) -> ÁO SƠ-MI (衬衫)."}, {"char": "衫", "radical": "衤 (Y - áo)", "strokes": 8, "note": "Áo (衤) có ba vạch (彡) thanh lịch -> ÁO SƠ-MI (衬衫)."}], "exampleZh": "他已经有很多件衬衫了，不要了。", "examplePy": "Tā yǐjīng yǒu hěn duō jiàn chènshān le, bù yào le.", "exampleVi": "Câu tiếp theo: Cháu nó có nhiều áo sơ mi rồi, không cần mua nữa."},
+      {"id": "l3p-20", "hanzi": "他已经有很多件衬衫了，不要了。", "pinyin": "Tā yǐjīng yǒu hěn duō jiàn chènshān le, bù yào le.", "meaning": "Cháu nó có nhiều áo sơ mi rồi, không cần mua nữa.", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "件", "radical": "亻 (Nhân đứng)", "strokes": 6, "note": "Lượng từ cho áo sơ-mi (một chiếc áo) -> CHIẾC / CÁI (件)."}], "exampleZh": "谢谢你！", "examplePy": "Xièxie nǐ!", "exampleVi": "Câu tiếp theo: Cảm ơn em!"},
+      {"id": "l3p-21", "hanzi": "谢谢你！", "pinyin": "Xièxie nǐ!", "meaning": "Cảm ơn em!", "topic": "L3 Mua quần", "status": "learning", "breakdown": [{"char": "谢", "radical": "讠 (Ngôn - lời nói)", "strokes": 12, "note": "Dùng lời nói (讠) cúi thân (身) bày tỏ từng tấc (寸) lòng -> CẢM ƠN (谢谢)."}], "exampleZh": "不客气，欢迎下次再来！", "examplePy": "Bù kèqi, huānyíng xià cì zài lái!", "exampleVi": "Mở rộng: Không có gì ạ, hoan nghênh chị lần sau lại tới!"},
+      {"id": "l3r-1", "hanzi": "丽丽家住在五楼。", "pinyin": "Lìli jiā zhù zài wǔ lóu.", "meaning": "Nhà Lệ Lệ ở tầng năm.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "住", "radical": "亻 (Nhân đứng)", "strokes": 7, "note": "Người (亻) làm chủ (主) một ngôi nhà -> SINH SỐNG / Ở (住)."}, {"char": "楼", "radical": "木 (Mộc - gỗ)", "strokes": 13, "note": "Nhà lầu dựng bằng gỗ (木) -> TẦNG / LẦU (楼)."}], "exampleZh": "他们有三个房间。", "examplePy": "Tāmen yǒu sān ge fángjiān.", "exampleVi": "Câu tiếp theo: Nhà họ có ba phòng."},
+      {"id": "l3r-2", "hanzi": "他们有三个房间。", "pinyin": "Tāmen yǒu sān ge fángjiān.", "meaning": "Nhà họ có ba phòng.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "房", "radical": "户 (Hộ - cửa)", "strokes": 8, "note": "Cánh cửa (户) mở ra hình vuông (方) -> PHÒNG / NHÀ (房间)."}], "exampleZh": "这是丽丽的房间。", "examplePy": "Zhè shì Lìli de fángjiān.", "exampleVi": "Câu tiếp theo: Đây là phòng của Lệ Lệ."},
+      {"id": "l3r-3", "hanzi": "这是丽丽的房间。", "pinyin": "Zhè shì Lìli de fángjiān.", "meaning": "Đây là phòng của Lệ Lệ.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "丽", "radical": "一 (Nhất)", "strokes": 7, "note": "Hai ô cửa cân đối -> ĐẸP / TÊN LỆ LỆ (丽)."}], "exampleZh": "她的房间很大。", "examplePy": "Tā de fángjiān hěn dà.", "exampleVi": "Câu tiếp theo: Phòng cô ấy rất rộng."},
+      {"id": "l3r-4", "hanzi": "她的房间很大。", "pinyin": "Tā de fángjiān hěn dà.", "meaning": "Phòng cô ấy rất rộng.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "大", "radical": "大 (Đại - lớn)", "strokes": 3, "note": "Người dang rộng hai tay -> TO / RỘNG (大)."}], "exampleZh": "她有一张漂亮的床。", "examplePy": "Tā yǒu yī zhāng piàoliang de chuáng.", "exampleVi": "Câu tiếp theo: Cô ấy có một chiếc giường rất đẹp."},
+      {"id": "l3r-5", "hanzi": "她有一张漂亮的床。", "pinyin": "Tā yǒu yī zhāng piàoliang de chuáng.", "meaning": "Cô ấy có một chiếc giường rất đẹp.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "张", "radical": "弓 (Cung)", "strokes": 7, "note": "Lượng từ cho giường, bàn, bản đồ -> CHIẾC / TẤM (张)."}, {"char": "床", "radical": "广 (Nghiễm - mái nhà)", "strokes": 7, "note": "Dưới mái nhà (广) đặt tấm gỗ (木) -> CÁI GIƯỜNG (床)."}], "exampleZh": "丽丽的小狗喜欢睡在床下面。", "examplePy": "Lìli de xiǎo gǒu xǐhuan shuì zài chuáng xiàmiàn.", "exampleVi": "Câu tiếp theo: Chú chó của Lệ Lệ thích nằm ngủ ở dưới giường."},
+      {"id": "l3r-6", "hanzi": "丽丽的小狗喜欢睡在床下面。", "pinyin": "Lìli de xiǎo gǒu xǐhuan shuì zài chuáng xiàmiàn.", "meaning": "Chú chó của Lệ Lệ thích nằm ngủ ở dưới giường.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "睡", "radical": "目 (Mục - mắt)", "strokes": 13, "note": "Đôi mắt (目) rũ xuống (垂) -> NGỦ (睡)."}, {"char": "下", "radical": "一 (Nhất)", "strokes": 3, "note": "Chỉ xuống dưới mặt phẳng -> DƯỚI (下面)."}], "exampleZh": "床旁边有一张桌子。", "examplePy": "Chuáng pángbiān yǒu yī zhāng zhuōzi.", "exampleVi": "Câu tiếp theo: Bên cạnh giường có một chiếc bàn."},
+      {"id": "l3r-7", "hanzi": "床旁边有一张桌子。", "pinyin": "Chuáng pángbiān yǒu yī zhāng zhuōzi.", "meaning": "Bên cạnh giường có một chiếc bàn.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "旁", "radical": "方 (Phương)", "strokes": 10, "note": "Đứng cạnh bốn phương -> BÊN CẠNH (旁边)."}, {"char": "桌", "radical": "木 (Mộc - gỗ)", "strokes": 10, "note": "Mặt phẳng đóng trên chân gỗ (木) -> CÁI BÀN (桌子)."}], "exampleZh": "桌子上放着一些书和笔记本，还有一个电脑。", "examplePy": "Zhuōzi shàng fàngzhe yīxiē shū hé bǐjìběn, hái yǒu yī ge diànnǎo.", "exampleVi": "Câu tiếp theo: Trên bàn có một ít sách và sổ ghi chép, còn có một chiếc máy tính."},
+      {"id": "l3r-8", "hanzi": "桌子上放着一些书和笔记本，还有一个电脑。", "pinyin": "Zhuōzi shàng fàngzhe yīxiē shū hé bǐjìběn, hái yǒu yī ge diànnǎo.", "meaning": "Trên bàn có một ít sách và sổ ghi chép, còn có một chiếc máy tính.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "笔", "radical": "⺮ (Trúc - tre)", "strokes": 10, "note": "Cán tre (⺮) gắn lông (毛) -> CÂY BÚT (笔)."}, {"char": "脑", "radical": "月 (Nhục)", "strokes": 10, "note": "Bộ não điện tử -> MÁY TÍNH (电脑)."}], "exampleZh": "门后面有两张地图，", "examplePy": "Mén hòumiàn yǒu liǎng zhāng dìtú,", "exampleVi": "Câu tiếp theo: Đằng sau cửa có hai tấm bản đồ,"},
+      {"id": "l3r-9", "hanzi": "门后面有两张地图，", "pinyin": "Mén hòumiàn yǒu liǎng zhāng dìtú,", "meaning": "Đằng sau cửa có hai tấm bản đồ,", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "门", "radical": "门 (Môn - cửa)", "strokes": 3, "note": "Hình khung cửa hai cánh -> CÁNH CỬA (门)."}, {"char": "图", "radical": "囗 (Vi - vây quanh)", "strokes": 8, "note": "Khung vẽ mặt đất -> BẢN ĐỒ (地图)."}], "exampleZh": "一张是中国地图，还有一张是世界地图。", "examplePy": "Yī zhāng shì Zhōngguó dìtú, hái yǒu yī zhāng shì shìjiè dìtú.", "exampleVi": "Câu tiếp theo: một tấm là bản đồ Trung Quốc, còn một tấm là bản đồ thế giới."},
+      {"id": "l3r-10", "hanzi": "一张是中国地图，还有一张是世界地图。", "pinyin": "Yī zhāng shì Zhōngguó dìtú, hái yǒu yī zhāng shì shìjiè dìtú.", "meaning": "một tấm là bản đồ Trung Quốc, còn một tấm là bản đồ thế giới.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "世", "radical": "一 (Nhất)", "strokes": 5, "note": "Ba mươi năm một đời -> THẾ GIỚI (世界)."}, {"char": "界", "radical": "田 (Điền - ruộng)", "strokes": 9, "note": "Ranh giới chia các thửa ruộng (田) -> GIỚI HẠN / THẾ GIỚI (界)."}], "exampleZh": "丽丽很喜欢旅游。", "examplePy": "Lìli hěn xǐhuan lǚyóu.", "exampleVi": "Câu tiếp theo: Lệ Lệ rất thích đi du lịch."},
+      {"id": "l3r-11", "hanzi": "丽丽很喜欢旅游。", "pinyin": "Lìli hěn xǐhuan lǚyóu.", "meaning": "Lệ Lệ rất thích đi du lịch.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "旅", "radical": "方 (Phương)", "strokes": 10, "note": "Đi tới nhiều phương trời -> DU LỊCH (旅游)."}, {"char": "游", "radical": "氵 (Thủy - nước)", "strokes": 12, "note": "Bơi lội rong chơi trên nước (氵) -> DU NGOẠN (游)."}], "exampleZh": "她每年旅游两次。", "examplePy": "Tā měi nián lǚyóu liǎng cì.", "exampleVi": "Câu tiếp theo: Mỗi năm cô ấy đi du lịch hai lần."},
+      {"id": "l3r-12", "hanzi": "她每年旅游两次。", "pinyin": "Tā měi nián lǚyóu liǎng cì.", "meaning": "Mỗi năm cô ấy đi du lịch hai lần.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "每", "radical": "毋 (Vô)", "strokes": 7, "note": "Cây cỏ mọc lên hàng ngày -> MỖI (每)."}, {"char": "次", "radical": "欠 (Khiếm)", "strokes": 6, "note": "Lượt thứ hai -> LẦN (次)."}], "exampleZh": "每次去过一个地方，", "examplePy": "Měi cì qùguo yī ge dìfang,", "exampleVi": "Câu tiếp theo: Mỗi lần đi qua một nơi,"},
+      {"id": "l3r-13", "hanzi": "每次去过一个地方，", "pinyin": "Měi cì qùguo yī ge dìfang,", "meaning": "Mỗi lần đi qua một nơi,", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "过", "radical": "辶 (Sước - bước đi)", "strokes": 6, "note": "Bước đi (辶) qua từng tấc (寸) -> TỪNG / ĐI QUA (过)."}, {"char": "方", "radical": "方 (Phương)", "strokes": 4, "note": "Phương hướng -> ĐỊA PHƯƠNG / NƠI (地方)."}], "exampleZh": "她就用红色的铅笔在地图上画一下。", "examplePy": "Tā jiù yòng hóngsè de qiānbǐ zài dìtú shàng huà yīxià.", "exampleVi": "Câu tiếp theo: cô ấy liền dùng một chiếc bút chì màu đỏ vẽ hình tròn trên bản đồ."},
+      {"id": "l3r-14", "hanzi": "她就用红色的铅笔在地图上画一下。", "pinyin": "Tā jiù yòng hóngsè de qiānbǐ zài dìtú shàng huà yīxià.", "meaning": "cô ấy liền dùng một chiếc bút chì màu đỏ vẽ hình tròn trên bản đồ.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "红", "radical": "纟 (Mịch - tơ)", "strokes": 6, "note": "Sợi tơ (纟) nhuộm công phu (工) -> MÀU ĐỎ (红)."}, {"char": "画", "radical": "田 (Điền - ruộng)", "strokes": 8, "note": "Kẻ khung thửa ruộng (田) -> VẼ (画)."}], "exampleZh": "到现在，她已经去过十几个地方了。", "examplePy": "Dào xiànzài, tā yǐjīng qùguo shí jǐ ge dìfang le.", "exampleVi": "Câu tiếp theo: Tới bây giờ, cô ấy đã đi qua mười mấy địa điểm rồi."},
+      {"id": "l3r-15", "hanzi": "到现在，她已经去过十几个地方了。", "pinyin": "Dào xiànzài, tā yǐjīng qùguo shí jǐ ge dìfang le.", "meaning": "Tới bây giờ, cô ấy đã đi qua mười mấy địa điểm rồi.", "topic": "L3 Bố trí căn phòng", "status": "learning", "breakdown": [{"char": "现", "radical": "王 (Vương - ngọc)", "strokes": 8, "note": "Viên ngọc (王) hiện ra trước mắt (见) -> HIỆN TẠI (现在)."}, {"char": "经", "radical": "纟 (Mịch - tơ)", "strokes": 8, "note": "Sợi tơ (纟) trải qua khung cửi -> ĐÃ TỪNG (已经)."}], "exampleZh": "真羡慕她去过那么多地方！", "examplePy": "Zhēn xiànmù tā qùguo nàme duō dìfang!", "exampleVi": "Mở rộng: Thật ngưỡng mộ cô ấy đã đi qua nhiều nơi như vậy!"},
       {
         id: 'today-1',
         hanzi: '我想出去吃饭，但是外面堵车了。',
@@ -698,16 +953,56 @@
       }, 2400);
     }
 
-    function speakZh(text, rate = 1.0) {
-      if (!('speechSynthesis' in window) || !text) {
-        showToast('Trình duyệt không hỗ trợ đọc giọng nói.');
-        return;
+    let currentAudioEl = null;
+    function playOnlineZhAudio(text, rate = 1.0) {
+      try {
+        if (currentAudioEl) {
+          currentAudioEl.pause();
+          currentAudioEl = null;
+        }
+        const spd = rate < 0.85 ? 3 : 5;
+        const url = `https://fanyi.baidu.com/gettts?lan=zh&text=${encodeURIComponent(text)}&spd=${spd}&source=web`;
+        const audio = new Audio(url);
+        audio.playbackRate = rate;
+        currentAudioEl = audio;
+        audio.play().catch(() => {
+          showToast('Không phát được âm thanh. Hãy kiểm tra loa hoặc kết nối mạng.');
+        });
+      } catch (e) {
+        showToast('Không phát được âm thanh.');
       }
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'zh-CN';
-      utter.rate = rate;
-      window.speechSynthesis.speak(utter);
+    }
+
+    function speakZh(text, rate = 1.0) {
+      if (!text) return;
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+          const hasZhVoice = voices.some(v => (v.lang || '').toLowerCase().includes('zh') || (v.lang || '').toLowerCase().includes('cn'));
+          if (voices.length > 0 && !hasZhVoice) {
+            playOnlineZhAudio(text, rate);
+            return;
+          }
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.lang = 'zh-CN';
+          utter.rate = rate;
+          let started = false;
+          utter.onstart = () => { started = true; };
+          utter.onerror = () => { if (!started) playOnlineZhAudio(text, rate); };
+          window.speechSynthesis.speak(utter);
+          setTimeout(() => {
+            if (!started && !window.speechSynthesis.speaking) {
+              playOnlineZhAudio(text, rate);
+            }
+          }, 600);
+          return;
+        } catch (e) {
+          playOnlineZhAudio(text, rate);
+          return;
+        }
+      }
+      playOnlineZhAudio(text, rate);
     }
 
     function getFilteredCards() {
@@ -940,7 +1235,12 @@
       document.getElementById('prac-hint-box').classList.add('hidden');
       document.getElementById('prac-feedback').classList.add('hidden');
       document.getElementById('prac-input').value = '';
-      document.getElementById('prac-speech-transcript').textContent = '';
+      const vInput = document.getElementById('prac-voice-input');
+      if (vInput) vInput.value = '';
+      const hwStatus = document.getElementById('hw-rec-status');
+      if (hwStatus) hwStatus.textContent = 'Thu âm trực tiếp từ Micro phần cứng của điện thoại.';
+      document.getElementById('btn-hw-play-mine')?.classList.add('hidden');
+      document.getElementById('btn-hw-compare')?.classList.add('hidden');
       clearHandwritingCanvas();
     }
 
@@ -1275,132 +1575,145 @@
       renderPracticeCard();
     });
 
-    // Speech Recognition (Voice Check)
-    let recognition = null;
-    let isRecording = false;
-    let recTimeout = null;
-    let lastInterimText = '';
-    let hasFinalResult = false;
+    // Voice Check & Hardware Audio Recorder for Chinese Domestic Phones
+    let voiceDebounceTimer = null;
+    let isComposingVoice = false;
+    const voiceInputEl = document.getElementById('prac-voice-input');
 
-    function evaluateSpokenResults(results) {
-      const transcriptEl = document.getElementById('prac-speech-transcript');
-      const spoken = (results[0] || '').trim();
-      if (!spoken) return;
-      transcriptEl.textContent = `Máy nghe được: "${spoken}"`;
-
+    function evaluateVoiceDictation(rawText) {
       const filtered = getFilteredCards();
-      if (!filtered[currentIndex]) return;
+      if (filtered.length === 0) return;
       const card = filtered[currentIndex];
-      const cleanTarget = cleanChinesePunct(card.hanzi);
-      const matched = results.some(r => {
-        const cleanSpoken = cleanChinesePunct(r);
-        if (!cleanSpoken) return false;
-        const ratio = calcCharOverlap(cleanSpoken, cleanTarget);
-        return cleanSpoken === cleanTarget || ratio >= 0.65;
-      });
+      const userRaw = (rawText || '').trim();
+      if (!userRaw) return;
 
-      if (matched) {
-        showPracticeFeedback(card, true, `🎉 Phát âm chuẩn! Máy nhận diện đúng "${spoken}".`);
+      const cleanUser = cleanChinesePunct(userRaw);
+      const cleanHanzi = cleanChinesePunct(card.hanzi);
+      const isHanziMatch = cleanUser === cleanHanzi;
+      const overlap = calcCharOverlap(cleanUser, cleanHanzi);
+      const isPinyinMatch = stripTones(userRaw) === stripTones(card.pinyin) && stripTones(card.pinyin).length > 0;
+
+      if (isHanziMatch) {
+        showPracticeFeedback(card, true, `🎉 Phát âm chuẩn xác 100%! Máy nhận diện đúng: "${userRaw}"`);
+      } else if (isPinyinMatch) {
+        showPracticeFeedback(card, true, `✅ Phát âm chuẩn Pinyin! Hãy đối chiếu mặt chữ Hán nhé:`);
+      } else if (overlap >= 0.7) {
+        showPracticeFeedback(card, true, `👍 Phát âm khá chuẩn (khớp ${Math.round(overlap * 100)}% chữ: "${userRaw}")!`);
       } else {
-        showPracticeFeedback(card, false, `Máy nghe thành "${spoken}" — hãy nghe lại phát âm chuẩn nhé:`);
+        showPracticeFeedback(card, false, `Máy nghe thành "${userRaw}" — hãy nghe lại câu chuẩn và đọc lại nhé:`);
       }
     }
 
-    function resetMicUI() {
-      isRecording = false;
-      clearTimeout(recTimeout);
-      document.getElementById('mic-icon').textContent = '🎙️';
-      document.getElementById('mic-label').textContent = 'Nhấn để đọc tiếng Trung';
-    }
+    voiceInputEl.addEventListener('compositionstart', () => {
+      isComposingVoice = true;
+    });
+    voiceInputEl.addEventListener('compositionend', () => {
+      isComposingVoice = false;
+      clearTimeout(voiceDebounceTimer);
+      voiceDebounceTimer = setTimeout(() => {
+        evaluateVoiceDictation(voiceInputEl.value);
+      }, 650);
+    });
+    voiceInputEl.addEventListener('input', () => {
+      if (isComposingVoice) return;
+      clearTimeout(voiceDebounceTimer);
+      voiceDebounceTimer = setTimeout(() => {
+        evaluateVoiceDictation(voiceInputEl.value);
+      }, 750);
+    });
+    document.getElementById('btn-voice-clear').addEventListener('click', () => {
+      voiceInputEl.value = '';
+      document.getElementById('prac-feedback').classList.add('hidden');
+      voiceInputEl.focus();
+    });
 
-    document.getElementById('btn-prac-mic').addEventListener('click', () => {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRec) {
-        showToast('Trình duyệt này không hỗ trợ nhận diện giọng nói. Hãy mở bằng Chrome/Safari.');
+    // Hardware Microphone Recorder (MediaRecorder API - works without Google Services)
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedAudioUrl = null;
+    let isHwRecording = false;
+
+    document.getElementById('btn-hw-rec').addEventListener('click', async () => {
+      const recIcon = document.getElementById('hw-rec-icon');
+      const recLabel = document.getElementById('hw-rec-label');
+      const statusEl = document.getElementById('hw-rec-status');
+      const playBtn = document.getElementById('btn-hw-play-mine');
+      const compareBtn = document.getElementById('btn-hw-compare');
+
+      if (isHwRecording && mediaRecorder) {
+        mediaRecorder.stop();
         return;
       }
-      if (isRecording && recognition) {
-        try { recognition.stop(); } catch (e) {}
-        if (!hasFinalResult && lastInterimText) {
-          hasFinalResult = true;
-          evaluateSpokenResults([lastInterimText]);
-        }
-        setTimeout(() => { if (isRecording) resetMicUI(); }, 500);
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusEl.textContent = 'Trình duyệt chưa cấp quyền Micro (hãy mở link https:// trong Chrome).';
         return;
       }
-      recognition = new SpeechRec();
-      recognition.lang = 'zh-CN';
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 3;
-      lastInterimText = '';
-      hasFinalResult = false;
-
-      const micIcon = document.getElementById('mic-icon');
-      const micLabel = document.getElementById('mic-label');
-      const transcriptEl = document.getElementById('prac-speech-transcript');
-
-      recognition.onstart = () => {
-        isRecording = true;
-        micIcon.textContent = '⏹️';
-        micLabel.textContent = 'Đang nghe... (Nói xong bấm lại để dừng)';
-        transcriptEl.textContent = 'Đang lắng nghe giọng của bạn...';
-        clearTimeout(recTimeout);
-        recTimeout = setTimeout(() => {
-          if (isRecording) {
-            try { recognition.stop(); } catch (e) {}
-            if (!hasFinalResult && lastInterimText) {
-              hasFinalResult = true;
-              evaluateSpokenResults([lastInterimText]);
-            }
-            resetMicUI();
-          }
-        }, 12000);
-      };
-
-      recognition.onresult = (event) => {
-        const lastIdx = event.results.length - 1;
-        const res = event.results[lastIdx];
-        const results = Array.from(res).map(r => r.transcript.trim());
-        lastInterimText = results[0] || '';
-        if (!res.isFinal) {
-          transcriptEl.textContent = `Đang nghe: "${lastInterimText}"`;
-          return;
-        }
-        hasFinalResult = true;
-        clearTimeout(recTimeout);
-        evaluateSpokenResults(results);
-        try { recognition.stop(); } catch (e) {}
-      };
-
-      recognition.onerror = (event) => {
-        const err = event && event.error ? event.error : 'unknown';
-        if (err === 'no-speech') {
-          transcriptEl.textContent = 'Không nghe thấy tiếng nào. Hãy đưa mic gần hơn và nói to rõ.';
-        } else if (err === 'network') {
-          transcriptEl.textContent = 'Lỗi mạng khi nhận diện giọng nói (Google Speech cần kết nối mạng ổn định).';
-        } else if (err === 'not-allowed' || err === 'service-not-allowed') {
-          transcriptEl.textContent = 'Chưa được cấp quyền Micro. Hãy bấm biểu tượng ổ khóa trên thanh địa chỉ Chrome để bật Micro.';
-        } else {
-          transcriptEl.textContent = `Không thu được giọng nói (mã lỗi: ${err}).`;
-        }
-        resetMicUI();
-      };
-
-      recognition.onend = () => {
-        if (!hasFinalResult && lastInterimText) {
-          hasFinalResult = true;
-          evaluateSpokenResults([lastInterimText]);
-        }
-        resetMicUI();
-      };
 
       try {
-        recognition.start();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstart = () => {
+          isHwRecording = true;
+          recIcon.textContent = '⏹️';
+          recLabel.textContent = 'Đang thu... (Đọc xong bấm để dừng)';
+          statusEl.textContent = 'Đang thu âm trực tiếp từ Micro điện thoại...';
+        };
+
+        mediaRecorder.onstop = () => {
+          isHwRecording = false;
+          stream.getTracks().forEach(t => t.stop());
+          recIcon.textContent = '🔴';
+          recLabel.textContent = 'Thu âm lại';
+
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
+          recordedAudioUrl = URL.createObjectURL(blob);
+
+          playBtn.classList.remove('hidden');
+          compareBtn.classList.remove('hidden');
+          statusEl.textContent = 'Đã thu xong! Đang phát lại giọng của bạn rồi đối chiếu với giọng chuẩn...';
+
+          const filtered = getFilteredCards();
+          if (filtered[currentIndex]) {
+            const card = filtered[currentIndex];
+            showPracticeFeedback(card, null, '🎧 Hãy nghe giọng bạn vừa thu và đối chiếu với phát âm chuẩn:');
+            const myAudio = new Audio(recordedAudioUrl);
+            myAudio.onended = () => {
+              setTimeout(() => speakZh(card.hanzi, 1.0), 350);
+            };
+            myAudio.play().catch(() => {});
+          }
+        };
+
+        mediaRecorder.start();
       } catch (err) {
-        resetMicUI();
-        showToast('Không thể khởi động Micro.');
+        isHwRecording = false;
+        statusEl.textContent = 'Không mở được Micro. Hãy bấm biểu tượng ổ khóa trên thanh địa chỉ để Cho phép Micro.';
       }
+    });
+
+    document.getElementById('btn-hw-play-mine').addEventListener('click', () => {
+      if (!recordedAudioUrl) return;
+      const myAudio = new Audio(recordedAudioUrl);
+      myAudio.play();
+    });
+
+    document.getElementById('btn-hw-compare').addEventListener('click', () => {
+      if (!recordedAudioUrl) return;
+      const filtered = getFilteredCards();
+      const card = filtered[currentIndex];
+      const myAudio = new Audio(recordedAudioUrl);
+      myAudio.onended = () => {
+        if (card) setTimeout(() => speakZh(card.hanzi, 1.0), 300);
+      };
+      myAudio.play();
     });
 
     // Handwriting Canvas logic
